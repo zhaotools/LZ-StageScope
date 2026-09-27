@@ -67,6 +67,7 @@ const state = {
   watchlistScrollY: 0,
   pendingAssetId: null,
   pendingRoute: "overview",
+  dcaRangeYears: 1,
 };
 let chartLibraryPromise;
 let memberCaptchaToken = "";
@@ -1500,9 +1501,38 @@ function dcaTierClass(value) {
   return [0, 20, 40, 60, 80, 100].includes(tier) ? `tier-${tier}` : "tier-40";
 }
 
+function renderDcaZoneStatistics(dca, years = state.dcaRangeYears) {
+  const safeYears = Math.min(4, Math.max(1, Number(years) || 1));
+  const fullSeries = dca?.series || [];
+  const latestDate = fullSeries.at(-1)?.date || fullSeries.at(-1)?.time;
+  const cutoff = latestDate ? shiftIsoMonths(latestDate, -safeYears * 12) : "";
+  const selectedSeries = cutoff
+    ? fullSeries.filter((item) => String(item.date || item.time) >= cutoff)
+    : fullSeries;
+  const zoneDefinitions = [
+    { source: "抄底区", label: "低温区", className: "zone-cold" },
+    { source: "定投区", label: "定投区", className: "zone-invest" },
+    { source: "观望区", label: "观望区", className: "zone-watch" },
+    { source: "高温区", label: "高温区", className: "zone-hot" },
+  ];
+  $("#dca-statistics-period").textContent = dca?.historyLimited ? "历史不足" : `近${safeYears}年`;
+  $("#dca-tier-statistics").innerHTML = selectedSeries.length ? zoneDefinitions.map((item) => {
+    const days = selectedSeries.filter((point) => point.zone === item.source).length;
+    return `
+    <article class="dca-tier-card ${item.className}">
+      <span>${item.label}</span>
+      <strong>${fmt(days, 0)} 天</strong>
+      <p>${fmt(days / selectedSeries.length * 100, 1)}%</p>
+    </article>
+  `;
+  }).join("") : `<p class="dca-empty-copy">有效历史不足，暂不生成区间统计。</p>`;
+}
+
 function renderDca() {
   const dca = state.dca;
   if (!dca) return;
+  const rangeSelect = $("#dca-range-select");
+  if (rangeSelect) rangeSelect.value = String(state.dcaRangeYears);
   const current = dca.current || {};
   const currency = state.current?.quote?.currency || assets[state.assetId]?.currency || "USD";
   const historyLimited = Boolean(dca.historyLimited);
@@ -1532,16 +1562,7 @@ function renderDca() {
     ${historyLimited ? `<p class="dca-history-warning">${esc((dca.warnings || [])[0] || "历史数据不足，仅展示当前建议。")}</p>` : ""}
   `;
 
-  const distribution = [...(dca.statistics?.tierDistribution || [])]
-    .sort((left, right) => Number(right.amountTier) - Number(left.amountTier));
-  $("#dca-statistics-period").textContent = dca.statistics?.period || (historyLimited ? "历史不足" : "近4年");
-  $("#dca-tier-statistics").innerHTML = distribution.length ? distribution.map((item) => `
-    <article class="dca-tier-card ${esc(dcaTierClass(item.amountTier))}">
-      <span>${esc(item.label)}</span>
-      <strong>${fmt(item.amountTier, 0)}</strong>
-      <p>${fmt(item.days, 0)} 天 · ${fmt(Number(item.share) * 100, 1)}%</p>
-    </article>
-  `).join("") : `<p class="dca-empty-copy">有效历史不足，暂不生成区间统计。</p>`;
+  renderDcaZoneStatistics(dca);
 
   const signals = [...(dca.signals || [])].sort((left, right) => String(right.date).localeCompare(String(left.date)));
   $("#dca-signal-count").textContent = historyLimited ? "历史不足" : `${signals.length} 个确认信号`;
@@ -1695,17 +1716,13 @@ function installStageBackground(container, chart, series) {
 
 function installDcaBands(container, chart, dcaLine, bands) {
   const backgroundLayer = document.createElement("div");
-  const labelLayer = document.createElement("div");
   backgroundLayer.className = "dca-background-layer";
-  labelLayer.className = "dca-band-label-layer";
   container.prepend(backgroundLayer);
-  container.append(labelLayer);
   const floor = 0;
-  const ceiling = 2.5;
+  const ceiling = 3;
 
   const redraw = () => {
     backgroundLayer.replaceChildren();
-    labelLayer.replaceChildren();
     (bands || []).forEach((band) => {
       const minimum = band.minimum == null ? floor : Number(band.minimum);
       const maximum = band.maximum == null ? ceiling : Number(band.maximum);
@@ -1721,13 +1738,6 @@ function installDcaBands(container, chart, dcaLine, bands) {
       zone.style.top = `${top}px`;
       zone.style.height = `${height}px`;
       backgroundLayer.append(zone);
-      if (height >= 24) {
-        const label = document.createElement("span");
-        label.className = `dca-band-label ${dcaTierClass(band.amountTier)}`;
-        label.style.top = `${top + Math.min(10, Math.max(4, height / 4))}px`;
-        label.textContent = `${band.amountTier} · ${band.label}`;
-        labelLayer.append(label);
-      }
     });
   };
   chart.timeScale().subscribeVisibleLogicalRangeChange?.(redraw);
@@ -1963,6 +1973,13 @@ function renderDailyChart() {
   );
 }
 
+function applyDcaTimeRange(chart, series, years = state.dcaRangeYears) {
+  const latestDate = series.at(-1)?.date || series.at(-1)?.time;
+  if (!chart || !latestDate) return;
+  const safeYears = Math.min(4, Math.max(1, Number(years) || 1));
+  chart.timeScale().setVisibleRange({ from: shiftIsoMonths(latestDate, -safeYears * 12), to: latestDate });
+}
+
 function renderDcaChart() {
   const id = "dca-chart";
   const dca = state.dca;
@@ -1976,32 +1993,28 @@ function renderDcaChart() {
     container.innerHTML = '<p class="muted-copy">图表组件未能加载，定投建议仍可正常阅读。</p>';
     return;
   }
-  const numericPrices = priceSeries.flatMap((bar) => [bar.low, bar.high].map(Number)).filter(Number.isFinite);
+  const numericPrices = priceSeries.map((bar) => Number(bar.close)).filter(Number.isFinite);
   const priceMinimum = Math.min(...numericPrices);
   const priceMaximum = Math.max(...numericPrices);
-  const candle = api.addCandle({
+  const priceLine = api.addLine({
     priceScaleId: "right",
-    upColor: "#16835d",
-    downColor: "#c94f55",
-    borderVisible: false,
-    wickUpColor: "#16835d",
-    wickDownColor: "#c94f55",
+    color: "#c98632",
+    lineWidth: 2,
+    title: "",
     priceLineVisible: false,
     lastValueVisible: true,
+    crosshairMarkerVisible: true,
     autoscaleInfoProvider: () => ({
       priceRange: { minValue: priceMinimum, maxValue: priceMaximum },
     }),
   });
-  candle.setData(priceSeries.map((bar) => ({
-    time: bar.date || bar.time,
-    open: Number(bar.open), high: Number(bar.high), low: Number(bar.low), close: Number(bar.close),
-  })));
+  priceLine.setData(priceSeries.map((bar) => ({ time: bar.date || bar.time, value: Number(bar.close) })));
   const currentDca = Number(series.at(-1)?.lzDca);
-  const dcaAxisValues = [0, 0.5, 1, 2, currentDca].filter(Number.isFinite);
+  const dcaAxisValues = [0, 0.5, 1, 2, 3, currentDca].filter(Number.isFinite);
   const dcaAxisFormatter = (value) => {
     const match = dcaAxisValues.find((candidate) => Math.abs(Number(value) - candidate) < 0.005);
     if (match == null) return "";
-    if (Math.abs(match - currentDca) < 0.005 && ![0, 0.5, 1, 2].includes(match)) return match.toFixed(2);
+    if (Math.abs(match - currentDca) < 0.005 && ![0, 0.5, 1, 2, 3].includes(match)) return match.toFixed(2);
     return match === 0 ? "0" : match.toFixed(1);
   };
   const dcaLine = api.addLine({
@@ -2013,7 +2026,7 @@ function renderDcaChart() {
     lastValueVisible: true,
     priceFormat: { type: "custom", minMove: 0.01, formatter: dcaAxisFormatter },
     autoscaleInfoProvider: () => ({
-      priceRange: { minValue: 0, maxValue: 2.5 },
+      priceRange: { minValue: 0, maxValue: 3 },
     }),
   });
   dcaLine.setData(series.map((item) => ({ time: item.date || item.time, value: Number(item.lzDca) })));
@@ -2036,6 +2049,14 @@ function renderDcaChart() {
     axisLabelVisible: true,
     title: "",
   });
+  const ceilingLine = dcaLine.createPriceLine({
+    price: 3,
+    color: "rgba(110,130,146,.45)",
+    lineWidth: 1,
+    lineVisible: false,
+    axisLabelVisible: true,
+    title: "",
+  });
   const anchors = api.addLine({
     priceScaleId: "left",
     color: "rgba(0,0,0,0)",
@@ -2047,21 +2068,21 @@ function renderDcaChart() {
   });
   anchors.setData([
     { time: series[0].date || series[0].time, value: 0 },
-    { time: series.at(-1).date || series.at(-1).time, value: 2.5 },
+    { time: series.at(-1).date || series.at(-1).time, value: 3 },
   ]);
-  const priceDates = new Set(priceSeries.map((bar) => bar.date || bar.time));
+  const dcaDates = new Set(series.map((item) => item.date || item.time));
   const signalMarkers = [...(dca.signals || [])]
-    .filter((signal) => priceDates.has(signal.date))
+    .filter((signal) => dcaDates.has(signal.date))
     .sort((left, right) => String(left.date).localeCompare(String(right.date)))
     .map((signal) => ({
       time: signal.date,
-      position: signal.type === "high" ? "aboveBar" : "belowBar",
+      position: "inBar",
       color: signal.type === "high" ? "#c94f55" : "#16835d",
       shape: "circle",
       text: "",
       size: 0.8,
     }));
-  candle.setMarkers?.(signalMarkers);
+  dcaLine.setMarkers?.(signalMarkers);
   api.chart.priceScale("left").applyOptions({
     visible: true,
     borderColor: "rgba(16,40,59,.12)",
@@ -2073,6 +2094,7 @@ function renderDcaChart() {
     scaleMargins: { top: 0.08, bottom: 0.08 },
   });
   api.chart.timeScale().fitContent();
+  applyDcaTimeRange(api.chart, series);
   const redrawBands = installDcaBands(container, api.chart, dcaLine, dca.bands);
   const redrawAfterInteraction = () => requestAnimationFrame(() => requestAnimationFrame(redrawBands));
   container.addEventListener("pointermove", (event) => { if (event.buttons) redrawAfterInteraction(); }, { capture: true });
@@ -2085,11 +2107,12 @@ function renderDcaChart() {
   observer.observe(container);
   state.charts.set(id, {
     ...api,
-    candle,
+    priceLine,
     dcaLine,
     anchors,
     temperatureLines,
     zeroLine,
+    ceilingLine,
     signalMarkers,
     observer,
     redrawDecoration: redrawBands,
@@ -2435,6 +2458,14 @@ $("#asset-watchlist").addEventListener("pointermove", handleWatchlistPointerMove
 $("#asset-watchlist").addEventListener("pointerup", handleWatchlistPointerUp);
 $("#asset-watchlist").addEventListener("pointercancel", handleWatchlistPointerUp);
 $("#asset-watchlist").addEventListener("keydown", handleWatchlistKeydown);
+$("#dca-range-select").addEventListener("change", (event) => {
+  state.dcaRangeYears = Math.min(4, Math.max(1, Number(event.target.value) || 1));
+  if (state.dca) renderDcaZoneStatistics(state.dca, state.dcaRangeYears);
+  const chartEntry = state.charts.get("dca-chart");
+  if (!chartEntry || !state.dca?.series?.length) return;
+  applyDcaTimeRange(chartEntry.chart, state.dca.series, state.dcaRangeYears);
+  requestAnimationFrame(() => requestAnimationFrame(chartEntry.redrawDecoration));
+});
 
 let deferredInstall;
 const installButton = $("#install-button");
@@ -2481,7 +2512,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.2.2", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.2.3", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
