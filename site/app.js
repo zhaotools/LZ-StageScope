@@ -860,6 +860,7 @@ function openMemberLogin(assetId = null, route = "overview") {
   }
   $("#member-login-view").hidden = false;
   $("#member-account-view").hidden = true;
+  $(".member-dialog-panel").classList.remove("member-account-mode");
   $(".member-dialog-panel").setAttribute("aria-labelledby", "member-dialog-title");
   $("#member-dialog-title").textContent = assetId ? "LZ会员专享" : "会员登录";
   $("#member-dialog-copy").textContent = assetId
@@ -882,6 +883,7 @@ function openMemberAccount() {
   removeTurnstileWidget();
   $("#member-login-view").hidden = true;
   $("#member-account-view").hidden = false;
+  $(".member-dialog-panel").classList.add("member-account-mode");
   $(".member-dialog-panel").setAttribute("aria-labelledby", "member-account-title");
   $("#member-dialog-name").textContent = state.memberProfile.display_name || "会员";
   $("#member-dialog-expiry").textContent = memberExpiryLabel();
@@ -900,6 +902,7 @@ function closeMemberDialog({ preservePending = false } = {}) {
   removeTurnstileWidget();
   removeAccountTurnstileWidget();
   $("#member-dialog").hidden = true;
+  $(".member-dialog-panel").classList.remove("member-account-mode");
   document.body.classList.remove("member-dialog-open");
   if (!preservePending) {
     state.pendingAssetId = null;
@@ -2218,7 +2221,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.1.7", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.1.8", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

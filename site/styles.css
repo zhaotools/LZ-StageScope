@@ -1481,8 +1481,30 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   }
   .mobile-nav a { padding: 10px 4px; border-radius: 11px; color: var(--muted); text-align: center; font-size: 11px; font-weight: 650; }
   .mobile-nav a.active { color: white; background: var(--navy); box-shadow: 0 7px 17px rgba(18, 53, 83, 0.18); }
-  .member-dialog { padding: 12px; }
-  .member-dialog-panel { padding: 23px 20px; border-radius: 18px; }
+  .member-dialog { padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom)); }
+  .member-dialog-panel { max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 23px 20px; border-radius: 18px; }
+  .member-dialog-panel.member-account-mode { width: min(430px, 100%); padding: 14px 16px; overflow-y: auto; overscroll-behavior: contain; }
+  .member-account-mode .member-dialog-close { top: 10px; right: 10px; width: 30px; height: 30px; }
+  .member-account-mode .member-dialog-icon { width: 36px; height: 36px; margin-bottom: 7px; border-radius: 10px; font-size: 10px; }
+  .member-account-mode .member-dialog-kicker { font-size: 8px; }
+  .member-account-mode h2 { margin: 3px 0 5px; font-size: 20px; line-height: 1.15; }
+  .member-account-mode .member-account-summary { display: flex; gap: 8px; min-height: 36px; margin: 0; padding: 8px 10px; align-items: center; justify-content: space-between; }
+  .member-account-mode .member-account-summary strong { min-width: 0; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  .member-account-mode .member-account-summary span { flex: 0 0 auto; font-size: 9px; }
+  .member-account-mode .member-account-settings { gap: 8px; margin: 8px 0; }
+  .member-account-mode .member-account-settings form { grid-template-columns: 70px minmax(0, 1fr); gap: 6px 8px; padding: 10px; border-radius: 11px; }
+  .member-account-mode .account-form-heading { grid-column: 1 / -1; display: flex; gap: 8px; margin-bottom: 1px; align-items: baseline; justify-content: space-between; }
+  .member-account-mode .account-form-heading strong { font-size: 11px; }
+  .member-account-mode .account-form-heading span { font-size: 8px; text-align: right; }
+  .member-account-mode form > label { margin: 0; align-self: center; font-size: 9px; }
+  .member-account-mode form > input { height: 35px; border-radius: 9px; font-size: 11px; }
+  .member-account-mode .account-turnstile,
+  .member-account-mode .account-feedback,
+  .member-account-mode .account-save-button { grid-column: 1 / -1; }
+  .member-account-mode .account-turnstile { margin-top: 0; }
+  .member-account-mode .account-feedback { padding: 6px 8px; font-size: 9px; }
+  .member-account-mode .account-save-button,
+  .member-account-mode .member-dialog-logout { min-height: 34px; border-radius: 9px; font-size: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
