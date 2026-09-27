@@ -1549,9 +1549,6 @@ function renderDca() {
     <dl class="stat-list">
       <div><dt>确认日期</dt><dd>${esc(fmtDate(current.date || dca.asOf))}</dd></div>
       <div><dt>确认收盘</dt><dd>${fmt(current.price, 2)} ${esc(currency)}</dd></div>
-      <div><dt>融合状态</dt><dd>${esc(current.fusionStatus || "—")}</dd></div>
-      <div><dt>指标三状态</dt><dd>${esc(current.bandStatus || "—")}</dd></div>
-      <div><dt>综合评分</dt><dd>${fmt(current.score, 0)} / 100</dd></div>
     </dl>
     <div class="dca-recommendation ${esc(dcaTierClass(current.amountTier))}">
       <strong>规则建议</strong>
@@ -1571,9 +1568,10 @@ function renderDca() {
       <td>${esc(fmtDate(item.date))}</td>
       <td class="number-cell">${fmt(item.lzDca, 2)}</td>
       <td class="number-cell">${fmt(item.price, 2)}</td>
-      <td><span class="dca-signal-chip ${item.type === "low" ? "low" : "high"}">${esc(item.label)}</span>${item.reasons?.length ? `<small>${item.reasons.map(esc).join("；")}</small>` : ""}</td>
+      <td><span class="dca-signal-chip ${item.type === "low" ? "low" : "high"}">${esc(item.label)}</span></td>
+      <td class="dca-signal-detail">${item.reasons?.length ? esc(item.reasons.join("；")) : "—"}</td>
     </tr>
-  `).join("") : `<tr><td class="empty-history" colspan="4">${historyLimited ? "有效历史不足，暂不生成历史信号。" : "近4年没有满足严格确认条件的重要信号。"}</td></tr>`;
+  `).join("") : `<tr><td class="empty-history" colspan="5">${historyLimited ? "有效历史不足，暂不生成历史信号。" : "近4年没有满足严格确认条件的重要信号。"}</td></tr>`;
 
   if (historyLimited) {
     $("#dca-chart").innerHTML = `<div class="dca-chart-unavailable"><strong>历史图表暂不可用</strong><span>LZ-DCA V1.1 需要至少 ${fmt(dca.historyMeta?.requiredForFullHistory, 0)} 根有效日线生成可比历史。</span></div>`;
@@ -2512,7 +2510,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.2.3", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.2.4", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
