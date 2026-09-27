@@ -1780,6 +1780,31 @@ function installDcaBands(container, chart, dcaLine, bands) {
   return redraw;
 }
 
+function installDcaGuideLabels(container, chart, dcaLine, guides) {
+  const labelLayer = document.createElement("div");
+  labelLayer.className = "dca-guide-label-layer";
+  container.append(labelLayer);
+
+  const redraw = () => {
+    labelLayer.replaceChildren();
+    const leftScaleWidth = chart.priceScale("left").width?.() || 0;
+    guides.forEach((guide) => {
+      const y = dcaLine.priceToCoordinate(guide.price);
+      if (!Number.isFinite(y)) return;
+      const label = document.createElement("span");
+      label.className = "dca-guide-label";
+      label.textContent = guide.title;
+      label.style.left = `${leftScaleWidth + 2}px`;
+      label.style.top = `${y}px`;
+      label.style.setProperty("--dca-guide-color", guide.color);
+      labelLayer.append(label);
+    });
+  };
+  chart.timeScale().subscribeVisibleLogicalRangeChange?.(redraw);
+  requestAnimationFrame(() => requestAnimationFrame(redraw));
+  return redraw;
+}
+
 function installStageTransitions(container, chart, candle, series, history) {
   const layer = document.createElement("div");
   layer.className = "stage-transition-layer";
@@ -2058,19 +2083,22 @@ function renderDcaChart() {
     lineWidth: 2,
     title: "LZ-DCA",
     priceLineVisible: false,
-    lastValueVisible: true,
+    lastValueVisible: false,
     priceFormat: { type: "custom", minMove: 0.01, formatter: dcaAxisFormatter },
     autoscaleInfoProvider: () => ({
       priceRange: { minValue: 0, maxValue: 3 },
     }),
   });
   dcaLine.setData(series.map((item) => ({ time: item.date || item.time, value: Number(item.lzDca) })));
-  const temperatureLines = [
+  const dcaTemperatureGuides = [
     { price: 0.5, title: "低温线", color: "#2f6fb6" },
     { price: 1, title: "定投线", color: "#16835d" },
     { price: 2, title: "高位线", color: "#c94f55" },
-  ].map((line) => dcaLine.createPriceLine({
-    ...line,
+  ];
+  const temperatureLines = dcaTemperatureGuides.map(({ price, color }) => dcaLine.createPriceLine({
+    price,
+    color,
+    title: "",
     lineWidth: 1,
     lineStyle: 2,
     lineVisible: true,
@@ -2131,7 +2159,12 @@ function renderDcaChart() {
   api.chart.timeScale().fitContent();
   applyDcaTimeRange(api.chart, series);
   const redrawBands = installDcaBands(container, api.chart, dcaLine, dca.bands);
-  const redrawAfterInteraction = () => requestAnimationFrame(() => requestAnimationFrame(redrawBands));
+  const redrawGuideLabels = installDcaGuideLabels(container, api.chart, dcaLine, dcaTemperatureGuides);
+  const redrawDecoration = () => {
+    redrawBands();
+    redrawGuideLabels();
+  };
+  const redrawAfterInteraction = () => requestAnimationFrame(() => requestAnimationFrame(redrawDecoration));
   container.addEventListener("pointermove", (event) => { if (event.buttons) redrawAfterInteraction(); }, { capture: true });
   container.addEventListener("wheel", redrawAfterInteraction, { capture: true, passive: true });
   container.addEventListener("dblclick", redrawAfterInteraction, { capture: true });
@@ -2150,7 +2183,7 @@ function renderDcaChart() {
     ceilingLine,
     signalMarkers,
     observer,
-    redrawDecoration: redrawBands,
+    redrawDecoration,
   });
 }
 
@@ -2556,7 +2589,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.2.5", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.2.6", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

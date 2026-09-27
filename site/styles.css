@@ -820,7 +820,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   border-radius: 14px;
   background: var(--surface);
 }
-.chart > :not(.stage-background-layer):not(.stage-label-layer):not(.stage-transition-layer):not(.band-history-marker-layer):not(.stoch-rsi-label):not(.dca-background-layer) { position: relative; z-index: 1; }
+.chart > :not(.stage-background-layer):not(.stage-label-layer):not(.stage-transition-layer):not(.band-history-marker-layer):not(.stoch-rsi-label):not(.dca-background-layer):not(.dca-guide-label-layer) { position: relative; z-index: 1; }
 .stage-background-layer, .stage-label-layer, .stage-transition-layer, .band-history-marker-layer {
   position: absolute;
   inset: 0;
@@ -865,6 +865,19 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .dca-band-zone.tier-40 { background: rgba(201, 134, 50, 0.075); }
 .dca-band-zone.tier-20 { background: rgba(210, 111, 61, 0.07); }
 .dca-band-zone.tier-0 { background: rgba(201, 79, 85, 0.075); }
+.dca-guide-label-layer { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
+.dca-guide-label {
+  position: absolute;
+  padding: 3px 6px;
+  border-radius: 3px;
+  color: #fff;
+  background: var(--dca-guide-color);
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.35;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
 .stage-transition-badge {
   --stage-color: #65778a;
   position: absolute;
