@@ -1,4 +1,4 @@
-import { MEMBER_CONFIG } from "./member-config.js?v=1.0.17";
+import { MEMBER_CONFIG } from "./member-config.js?v=1.0.18";
 
 export { MEMBER_CONFIG };
 
@@ -84,6 +84,8 @@ export function clearMemberSession() {
 }
 
 let sessionRefreshInFlight = null;
+let deviceSessionCheckInFlight = null;
+let deviceSessionCheckToken = "";
 
 async function refreshMemberSession(session) {
   requireMemberConfig();
@@ -116,6 +118,60 @@ async function currentSession({ forceRefresh = false } = {}) {
   if (!stored) return null;
   const expiresSoon = Number(stored.expiresAt) * 1000 <= Date.now() + 60_000;
   return forceRefresh || expiresSoon ? refreshMemberSession(stored) : stored;
+}
+
+async function callDeviceSessionRpc(session, rpcName) {
+  if (!rpcName) throw new MemberAuthError("设备会话服务尚未配置", "device_session_not_configured");
+  let response;
+  try {
+    response = await fetch(`${MEMBER_CONFIG.supabaseUrl}/rest/v1/rpc/${rpcName}`, {
+      method: "POST",
+      headers: authHeaders(session.accessToken),
+      credentials: "omit",
+      cache: "no-store",
+      body: "{}",
+    });
+  } catch (error) {
+    throw new MemberAuthError(error?.message || "网络连接失败", "network_error");
+  }
+  return readResponse(response);
+}
+
+async function claimMemberDeviceSession(session) {
+  const result = await callDeviceSessionRpc(session, MEMBER_CONFIG.deviceSessionClaimRpc);
+  if (!result?.active) throw new MemberAuthError("设备会话登记失败", "device_session_claim_failed");
+  return result;
+}
+
+async function assertMemberDeviceSession(session) {
+  if (!deviceSessionCheckInFlight || deviceSessionCheckToken !== session.accessToken) {
+    deviceSessionCheckToken = session.accessToken;
+    const check = callDeviceSessionRpc(session, MEMBER_CONFIG.deviceSessionValidateRpc)
+      .then((result) => {
+        if (result?.active) return result;
+        clearMemberSession();
+        const expired = result?.reason === "member_login_required";
+        throw new MemberAuthError(
+          expired ? "会员登录已失效" : "账号已在另一台同类型设备登录",
+          expired ? "session_expired" : "session_replaced",
+        );
+      })
+      .finally(() => {
+        if (deviceSessionCheckInFlight === check) {
+          deviceSessionCheckInFlight = null;
+          deviceSessionCheckToken = "";
+        }
+      });
+    deviceSessionCheckInFlight = check;
+  }
+  return deviceSessionCheckInFlight;
+}
+
+export async function validateMemberDeviceSession() {
+  requireMemberConfig();
+  const session = await currentSession();
+  if (!session) throw new MemberAuthError("会员登录已失效", "session_expired");
+  return assertMemberDeviceSession(session);
 }
 
 async function fetchMemberProfile(session, allowRetry = true) {
@@ -163,6 +219,7 @@ function invalidStoredSession(error) {
     "invalid_session",
     "profile_not_found",
     "refresh_token_not_found",
+    "session_replaced",
     "user_not_found",
     "http_401",
   ]).has(String(error?.code || ""));
@@ -181,6 +238,7 @@ export async function restoreMemberSession() {
   try {
     const session = await currentSession();
     if (!session) return null;
+    await assertMemberDeviceSession(session);
     const profile = await fetchMemberProfile(session);
     if (!isProfileActive(profile)) {
       clearMemberSession();
@@ -218,6 +276,7 @@ export async function signInMember(email, password, captchaToken) {
   if (!isProfileActive(profile)) {
     throw new MemberAuthError("会员账号尚未激活、已暂停或已到期", "inactive_profile");
   }
+  await claimMemberDeviceSession(session);
   session.profile = profile;
   saveSession(session);
   return profile;
@@ -439,6 +498,7 @@ export async function signOutMember() {
   const session = readStoredSession();
   try {
     if (session?.accessToken) {
+      await callDeviceSessionRpc(session, MEMBER_CONFIG.deviceSessionReleaseRpc).catch(() => undefined);
       await fetch(`${MEMBER_CONFIG.supabaseUrl}/auth/v1/logout?scope=local`, {
         method: "POST",
         headers: authHeaders(session.accessToken),
@@ -462,11 +522,15 @@ export function memberErrorMessage(error) {
   if (error?.code === "same_password") return "新密码不能与当前密码相同。";
   if (error?.code === "weak_password") return error.message || "新密码强度不足，请使用至少 8 个字符。";
   if (error?.code === "reauthentication_needed") return "登录时间过久，请退出后重新登录再修改密码。";
+  if (error?.code === "session_replaced") return "账号已在另一台同类型设备登录，当前设备已退出。";
+  if (error?.code === "device_session_not_configured" || error?.code === "device_session_claim_failed") {
+    return "设备登录限制服务暂时不可用，请稍后重试。";
+  }
   if (error?.code === "asset_api_not_configured") return "资产初始化服务尚未发布，请稍后再试。";
   if (error?.code === "asset_limit_reached") return "个人资产已达到 30 个上限，请先移除一个资产。";
   if (error?.code === "asset_order_invalid") return "资产顺序无效，请刷新页面后重试。";
   if (error?.code === "invalid_asset_query") return "仅支持按资产代码查询，请检查代码格式。";
-  if (error?.code === "network_error") return "网络连接不稳定，资产顺序尚未保存，请稍后重试。";
+  if (error?.code === "network_error") return "网络连接不稳定，请稍后重试。";
   if (error?.code === "market_source_rate_limited") return "行情数据源当前查询繁忙，请稍后重试。";
   if (error?.code === "asset_history_insufficient") return "该资产的有效历史日线不足 260 条，暂时不能初始化。";
   if (error?.code === "asset_category_mismatch") return "资产与所选分类不一致，请重新选择。";

@@ -15,7 +15,8 @@ import {
   signOutMember,
   updateMemberDisplayName,
   updateMemberPassword,
-} from "./member-auth.js?v=1.1.1";
+  validateMemberDeviceSession,
+} from "./member-auth.js?v=1.1.2";
 
 const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
@@ -77,6 +78,7 @@ let turnstileWidgetId = null;
 let accountCaptchaToken = "";
 let accountTurnstileWidgetId = null;
 let watchlistDrag = null;
+let memberSessionEnding = false;
 
 const ASSET_CODE_PATTERNS = {
   us_equity: /^[A-Z][A-Z0-9.-]{0,14}$/,
@@ -665,12 +667,45 @@ async function refreshMemberLibrary({ quiet = false } = {}) {
 
 let lastMemberResumeRefresh = 0;
 
+function isEndedMemberSession(error) {
+  return ["session_expired", "session_replaced", "http_401"].includes(String(error?.code || ""));
+}
+
+async function handleEndedMemberSession(error) {
+  if (memberSessionEnding || !isMember()) return;
+  memberSessionEnding = true;
+  try {
+    await resetMemberUiAfterSessionEnd();
+    window.alert(memberErrorMessage(error));
+  } finally {
+    memberSessionEnding = false;
+  }
+}
+
+async function validateActiveMemberSession({ refreshLibrary = false } = {}) {
+  if (!isMember() || document.visibilityState === "hidden" || memberSessionEnding) return;
+  try {
+    await validateMemberDeviceSession();
+    if (refreshLibrary) await refreshMemberLibrary({ quiet: true });
+  } catch (error) {
+    if (isEndedMemberSession(error)) {
+      await handleEndedMemberSession(error);
+      return;
+    }
+    console.warn("Unable to validate the member device session", error);
+  }
+}
+
 function refreshMemberLibraryOnResume() {
   if (!isMember() || document.visibilityState === "hidden") return;
   const now = Date.now();
   if (now - lastMemberResumeRefresh < 1500) return;
   lastMemberResumeRefresh = now;
-  void refreshMemberLibrary({ quiet: true });
+  void validateActiveMemberSession({ refreshLibrary: true });
+}
+
+function heartbeatMemberDeviceSession() {
+  void validateActiveMemberSession();
 }
 
 function scheduleMemberAssetPoll(active) {
@@ -2235,9 +2270,8 @@ async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFro
   }
 }
 
-async function handleMemberLogout() {
+async function resetMemberUiAfterSessionEnd() {
   finishWatchlistDrag();
-  await signOutMember().catch(() => undefined);
   state.memberProfile = null;
   state.memberAssets = [];
   state.assetSummaries = new Map(state.assetSummaries.has("gold") ? [["gold", state.assetSummaries.get("gold")]] : []);
@@ -2254,6 +2288,11 @@ async function handleMemberLogout() {
     const targetRoute = routeFromLocation() === "methodology" ? "methodology" : "overview";
     await loadAsset("gold", { historyMode: state.watchlistView ? "none" : "push", targetRoute });
   }
+}
+
+async function handleMemberLogout() {
+  await signOutMember().catch(() => undefined);
+  await resetMemberUiAfterSessionEnd();
 }
 
 async function handleMemberLogin(event) {
@@ -2487,6 +2526,7 @@ document.addEventListener("visibilitychange", refreshMemberLibraryOnResume);
 window.addEventListener("pageshow", refreshMemberLibraryOnResume);
 window.addEventListener("focus", refreshMemberLibraryOnResume);
 window.addEventListener("online", refreshMemberLibraryOnResume);
+window.setInterval(heartbeatMemberDeviceSession, 60_000);
 window.addEventListener("popstate", () => {
   let context = locationContext();
   if (context.view === "watchlist" && mobileLayout.matches) {
@@ -2589,7 +2629,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.2.6", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.2.7", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
