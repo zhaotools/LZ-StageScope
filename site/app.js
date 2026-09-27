@@ -19,6 +19,7 @@ import {
 
 const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
+const PUBLIC_SUMMARY_CACHE_KEY = "lz-stagescope:public-summary:gold";
 const routes = new Set(["overview", "weekly", "daily", "dca", "fundamentals", "methodology"]);
 const mobileLayout = window.matchMedia("(max-width: 760px)");
 let forceInitialMobileWatchlist = mobileLayout.matches;
@@ -68,6 +69,7 @@ const state = {
   pendingAssetId: null,
   pendingRoute: "overview",
   dcaRangeYears: 1,
+  publicGoldRefresh: null,
 };
 let chartLibraryPromise;
 let memberCaptchaToken = "";
@@ -173,6 +175,41 @@ function dataRoot(assetId = state.assetId) {
 function loadAssetResource(assetId, resource, options) {
   if (assets[assetId]?.memberOnly) return loadMemberAssetResource(assetId, resource);
   return loadJson(new URL(resource, dataRoot(assetId)), options);
+}
+
+function cachePublicGoldSummary(snapshot) {
+  if (!Number.isFinite(Number(snapshot?.quote?.price))) return;
+  try {
+    window.localStorage.setItem(PUBLIC_SUMMARY_CACHE_KEY, JSON.stringify({
+      savedAt: new Date().toISOString(),
+      payload: snapshot,
+    }));
+  } catch (error) {
+    console.warn("Unable to cache the public GOLD summary", error);
+  }
+}
+
+function restoreCachedPublicGoldSummary() {
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(PUBLIC_SUMMARY_CACHE_KEY) || "null");
+    if (!Number.isFinite(Number(cached?.payload?.quote?.price))) return null;
+    const snapshot = { ...cached.payload, _watchlistCached: true, _watchlistCachedAt: cached.savedAt || "" };
+    state.assetSummaries.set("gold", snapshot);
+    updateAssetPresentationFromSnapshot("gold", snapshot);
+    return snapshot;
+  } catch (error) {
+    console.warn("Unable to restore the public GOLD summary", error);
+    return null;
+  }
+}
+
+async function refreshPublicGoldSummary() {
+  const snapshot = await loadAssetResource("gold", "current.json", { attempts: 3, timeoutMs: 7000 });
+  state.assetSummaries.set("gold", snapshot);
+  updateAssetPresentationFromSnapshot("gold", snapshot);
+  cachePublicGoldSummary(snapshot);
+  renderWatchlist();
+  return snapshot;
 }
 
 function routePath(route, assetId = state.assetId) {
@@ -354,7 +391,7 @@ function watchlistQuote(snapshot) {
     price: validPrice ? price.toLocaleString("zh-CN", { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—",
     change: Number.isFinite(change) ? `${change >= 0 ? "+" : ""}${change.toFixed(2)}%` : "—",
     tone: Number.isFinite(change) ? (change >= 0 ? "positive" : "negative") : "",
-    delayed: freshness?.sourceFresh === false,
+    delayed: Boolean(snapshot?._watchlistCached) || freshness?.sourceFresh === false,
     date: freshness?.lastDate || snapshot?.quote?.date || "",
   };
 }
@@ -2140,11 +2177,16 @@ async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFro
   $("#loading-state").hidden = false;
   $("#error-state").hidden = true;
   try {
-    const current = await loadAssetResource(assetId, "current.json", { attempts: 3, timeoutMs: 9000 });
+    const publicGoldRefresh = assetId === "gold" ? state.publicGoldRefresh : null;
+    if (publicGoldRefresh) state.publicGoldRefresh = null;
+    const current = publicGoldRefresh
+      ? await publicGoldRefresh
+      : await loadAssetResource(assetId, "current.json", { attempts: 3, timeoutMs: 9000 });
     if (token !== state.loadToken || assetId !== state.assetId) return;
     updateAssetPresentationFromSnapshot(assetId, current);
     state.current = current;
     state.assetSummaries.set(assetId, current);
+    if (assetId === "gold") cachePublicGoldSummary(current);
     updateHeader();
     renderWatchlist();
     renderOverview();
@@ -2274,7 +2316,11 @@ async function handlePasswordUpdate(event) {
 }
 
 async function boot() {
+  restoreCachedPublicGoldSummary();
   renderMemberControls();
+  renderWatchlist();
+  state.publicGoldRefresh = refreshPublicGoldSummary();
+  state.publicGoldRefresh.catch((error) => console.warn("Unable to refresh the public GOLD summary", error));
   state.memberProfile = await restoreMemberSession();
   state.authReady = true;
   renderMemberControls();
@@ -2510,7 +2556,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.2.4", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.2.5", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
