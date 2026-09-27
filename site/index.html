@@ -22,7 +22,7 @@
       #app-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:28px;color:#fff;background:#082d43;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;opacity:1;visibility:visible;transition:opacity .36s ease,visibility .36s ease;animation:app-splash-failsafe .3s ease 12s forwards}#app-splash.is-ready{pointer-events:none;opacity:0;visibility:hidden;animation:none}.app-splash-inner{display:grid;width:min(290px,82vw);justify-items:center;text-align:center;transform:translateY(-7svh)}.app-splash-mark{display:grid;width:92px;height:92px;margin-bottom:22px;place-items:center;border:1px solid rgba(126,192,226,.28);border-radius:24px;background:#0b344b;box-shadow:0 20px 55px rgba(0,9,20,.28)}.app-splash-mark img{display:block;width:76px;height:76px;border-radius:18px}.app-splash-title{margin:0;color:#fff;font-size:24px;font-weight:760;letter-spacing:.01em}.app-splash-brand{margin:7px 0 0;color:rgba(255,255,255,.58);font-size:11px;font-weight:760;letter-spacing:.2em}.app-splash-rule{width:42px;height:2px;margin:22px 0 17px;border-radius:2px;background:#a87320}.app-splash-loading{display:grid;gap:16px;justify-items:center;transform:translateY(15svh)}.app-splash-status{margin:0;color:rgba(255,255,255,.7);font-size:11px;letter-spacing:.08em}.app-splash-progress{width:116px;height:2px;overflow:hidden;border-radius:2px;background:rgba(255,255,255,.12)}.app-splash-progress span{display:block;width:48%;height:100%;border-radius:inherit;background:#5eb4dc;animation:app-splash-progress 1.35s ease-in-out infinite}.app-splash-note{position:absolute;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));left:20px;margin:0;color:rgba(255,255,255,.34);font-size:9px;letter-spacing:.12em;text-align:center}@keyframes app-splash-progress{0%{transform:translateX(-110%)}100%{transform:translateX(220%)}}@keyframes app-splash-failsafe{to{pointer-events:none;opacity:0;visibility:hidden}}@media(prefers-reduced-motion:reduce){#app-splash{transition:none}.app-splash-progress span{animation:none;width:100%;opacity:.7}}
       @media (min-width:761px) and (display-mode:browser) and (pointer:fine){#app-splash{display:none}}
     </style>
-    <link rel="stylesheet" href="./styles.css?v=1.2.1">
+    <link rel="stylesheet" href="./styles.css?v=1.2.2">
   </head>
   <body class="app-booting" aria-busy="true">
     <div id="app-splash" role="status" aria-live="polite" aria-label="正在加载我的趋势观察">
@@ -244,7 +244,7 @@
         <div class="content-grid detail-grid dca-detail-grid">
           <article class="panel chart-panel dca-chart-panel">
             <div class="chart-header">
-              <div class="chart-title"><h3>价格与 LZ-DCA</h3><span>旧版 v1.1 · 仅使用确认收盘日线 · 默认近4年</span></div>
+              <div class="chart-title"><h3>价格与 LZ-DCA</h3><span>LZ-DCA V1.1 · 仅使用确认收盘日线 · 默认近4年</span></div>
               <div class="chart-legend" aria-label="定投图例"><span class="dca-line-key">LZ-DCA</span><span class="price-line-key">价格</span></div>
             </div>
             <div class="dca-band-key" aria-label="六档定投分区">
@@ -293,7 +293,7 @@
         <div class="method-grid">
           <article class="panel method-card"><span>01</span><h3>周线决定战略背景</h3><p>LZ-4Stage 只使用完整周线，识别当前阶段、转换状态和阶段证据。</p></article>
           <article class="panel method-card"><span>02</span><h3>日线描述执行风险</h3><p>LZ-Status-V3 只使用确认收盘日线，展示趋势、交通灯、波动与融合状态。</p></article>
-          <article class="panel method-card"><span>03</span><h3>LZ-DCA 管理投入节奏</h3><p>旧版 LZ-DCA v1.1 使用确认收盘日线，独立生成六档定投建议和重要信号点。</p></article>
+          <article class="panel method-card"><span>03</span><h3>LZ-DCA 管理投入节奏</h3><p>LZ-DCA V1.1 使用确认收盘日线，独立生成六档定投建议和重要信号点。</p></article>
           <article class="panel method-card"><span>04</span><h3>基本面解释顺风逆风</h3><p>利率、美元、资金流和事件各自保留来源、观察日期与更新频率。</p></article>
           <article class="panel method-card"><span>05</span><h3>分歧可以被保留</h3><p>系统不强行生成综合分数，而是明确展示周线、日线、定投与基本面之间的共振或冲突。</p></article>
         </div>
@@ -401,6 +401,6 @@
     </div>
 
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script type="module" src="./app.js?v=1.2.1"></script>
+    <script type="module" src="./app.js?v=1.2.2"></script>
   </body>
 </html>

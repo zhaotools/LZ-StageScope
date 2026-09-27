@@ -1555,7 +1555,7 @@ function renderDca() {
   `).join("") : `<tr><td class="empty-history" colspan="4">${historyLimited ? "有效历史不足，暂不生成历史信号。" : "近4年没有满足严格确认条件的重要信号。"}</td></tr>`;
 
   if (historyLimited) {
-    $("#dca-chart").innerHTML = `<div class="dca-chart-unavailable"><strong>历史图表暂不可用</strong><span>旧版 LZ-DCA 需要至少 ${fmt(dca.historyMeta?.requiredForFullHistory, 0)} 根有效日线生成可比历史。</span></div>`;
+    $("#dca-chart").innerHTML = `<div class="dca-chart-unavailable"><strong>历史图表暂不可用</strong><span>LZ-DCA V1.1 需要至少 ${fmt(dca.historyMeta?.requiredForFullHistory, 0)} 根有效日线生成可比历史。</span></div>`;
   }
 }
 
@@ -1570,7 +1570,7 @@ function renderMethodology() {
     <div class="provenance-grid">
       <div class="code-block">周线引擎<br>${esc(engines.weekly.name)}<br>内部版本: ${esc(engines.weekly.version)}</div>
       <div class="code-block">日线引擎<br>${esc(engines.daily.name)}<br>内部版本: ${esc(engines.daily.version)}</div>
-      <div class="code-block">定投引擎<br>${esc(engines.dca?.name || "LZ-DCA")} · ${esc(engines.dca?.baseline || "v1.1")}<br>内部版本: ${esc(engines.dca?.version || "LZAS-DCA-1.1.0")}</div>
+      <div class="code-block">定投引擎<br>LZ-DCA V1.1<br>内部版本: ${esc(engines.dca?.version || "LZAS-DCA-1.1.0")}</div>
       <div class="code-block">统一输入原则<br>同一份标准化 OHLC<br>周线、日线与定投同源</div>
       <div class="code-block">周期确认原则<br>只使用完成周线<br>只使用确认收盘日线</div>
       <div class="code-block">数据状态原则<br>缺失与沿用明确标识<br>不把缺失数据解释为中性</div>
@@ -1700,7 +1700,7 @@ function installDcaBands(container, chart, dcaLine, bands) {
   labelLayer.className = "dca-band-label-layer";
   container.prepend(backgroundLayer);
   container.append(labelLayer);
-  const floor = 0.3;
+  const floor = 0;
   const ceiling = 2.5;
 
   const redraw = () => {
@@ -1976,6 +1976,9 @@ function renderDcaChart() {
     container.innerHTML = '<p class="muted-copy">图表组件未能加载，定投建议仍可正常阅读。</p>';
     return;
   }
+  const numericPrices = priceSeries.flatMap((bar) => [bar.low, bar.high].map(Number)).filter(Number.isFinite);
+  const priceMinimum = Math.min(...numericPrices);
+  const priceMaximum = Math.max(...numericPrices);
   const candle = api.addCandle({
     priceScaleId: "right",
     upColor: "#16835d",
@@ -1985,21 +1988,54 @@ function renderDcaChart() {
     wickDownColor: "#c94f55",
     priceLineVisible: false,
     lastValueVisible: true,
+    autoscaleInfoProvider: () => ({
+      priceRange: { minValue: priceMinimum, maxValue: priceMaximum },
+    }),
   });
   candle.setData(priceSeries.map((bar) => ({
     time: bar.date || bar.time,
     open: Number(bar.open), high: Number(bar.high), low: Number(bar.low), close: Number(bar.close),
   })));
+  const currentDca = Number(series.at(-1)?.lzDca);
+  const dcaAxisValues = [0, 0.5, 1, 2, currentDca].filter(Number.isFinite);
+  const dcaAxisFormatter = (value) => {
+    const match = dcaAxisValues.find((candidate) => Math.abs(Number(value) - candidate) < 0.005);
+    if (match == null) return "";
+    if (Math.abs(match - currentDca) < 0.005 && ![0, 0.5, 1, 2].includes(match)) return match.toFixed(2);
+    return match === 0 ? "0" : match.toFixed(1);
+  };
   const dcaLine = api.addLine({
     priceScaleId: "left",
     color: "#2478a5",
     lineWidth: 2,
     title: "LZ-DCA",
-    priceLineVisible: true,
+    priceLineVisible: false,
     lastValueVisible: true,
-    priceFormat: { type: "price", precision: 2, minMove: 0.01 },
+    priceFormat: { type: "custom", minMove: 0.01, formatter: dcaAxisFormatter },
+    autoscaleInfoProvider: () => ({
+      priceRange: { minValue: 0, maxValue: 2.5 },
+    }),
   });
   dcaLine.setData(series.map((item) => ({ time: item.date || item.time, value: Number(item.lzDca) })));
+  const temperatureLines = [
+    { price: 0.5, title: "低温线", color: "#2f6fb6" },
+    { price: 1, title: "定投线", color: "#16835d" },
+    { price: 2, title: "高位线", color: "#c94f55" },
+  ].map((line) => dcaLine.createPriceLine({
+    ...line,
+    lineWidth: 1,
+    lineStyle: 2,
+    lineVisible: true,
+    axisLabelVisible: true,
+  }));
+  const zeroLine = dcaLine.createPriceLine({
+    price: 0,
+    color: "rgba(110,130,146,.45)",
+    lineWidth: 1,
+    lineVisible: false,
+    axisLabelVisible: true,
+    title: "",
+  });
   const anchors = api.addLine({
     priceScaleId: "left",
     color: "rgba(0,0,0,0)",
@@ -2010,9 +2046,22 @@ function renderDcaChart() {
     crosshairMarkerVisible: false,
   });
   anchors.setData([
-    { time: series[0].date || series[0].time, value: 0.3 },
+    { time: series[0].date || series[0].time, value: 0 },
     { time: series.at(-1).date || series.at(-1).time, value: 2.5 },
   ]);
+  const priceDates = new Set(priceSeries.map((bar) => bar.date || bar.time));
+  const signalMarkers = [...(dca.signals || [])]
+    .filter((signal) => priceDates.has(signal.date))
+    .sort((left, right) => String(left.date).localeCompare(String(right.date)))
+    .map((signal) => ({
+      time: signal.date,
+      position: signal.type === "high" ? "aboveBar" : "belowBar",
+      color: signal.type === "high" ? "#c94f55" : "#16835d",
+      shape: "circle",
+      text: "",
+      size: 0.8,
+    }));
+  candle.setMarkers?.(signalMarkers);
   api.chart.priceScale("left").applyOptions({
     visible: true,
     borderColor: "rgba(16,40,59,.12)",
@@ -2034,7 +2083,17 @@ function renderDcaChart() {
     redrawAfterInteraction();
   });
   observer.observe(container);
-  state.charts.set(id, { ...api, candle, dcaLine, anchors, observer, redrawDecoration: redrawBands });
+  state.charts.set(id, {
+    ...api,
+    candle,
+    dcaLine,
+    anchors,
+    temperatureLines,
+    zeroLine,
+    signalMarkers,
+    observer,
+    redrawDecoration: redrawBands,
+  });
 }
 
 async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFromLocation() } = {}) {
@@ -2422,7 +2481,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.2.1", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.2.2", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
