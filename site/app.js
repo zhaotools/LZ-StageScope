@@ -1,6 +1,7 @@
 import {
   MEMBER_CONFIG,
   addMemberAsset,
+  isDcaEnabled,
   isProfileActive,
   loadMemberAssetResource,
   loadMemberAssetSummaries,
@@ -16,7 +17,7 @@ import {
   updateMemberDisplayName,
   updateMemberPassword,
   validateMemberDeviceSession,
-} from "./member-auth.js?v=1.1.2";
+} from "./member-auth.js?v=1.1.3";
 
 const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
@@ -69,6 +70,7 @@ const state = {
   watchlistScrollY: 0,
   pendingAssetId: null,
   pendingRoute: "overview",
+  pendingDcaNotice: false,
   dcaRangeYears: 1,
   publicGoldRefresh: null,
 };
@@ -175,6 +177,10 @@ function dataRoot(assetId = state.assetId) {
 }
 
 function loadAssetResource(assetId, resource, options) {
+  if (resource === "dca-series.json") {
+    if (!canUseDca()) throw new Error("当前账号未开通定投指标。");
+    return loadMemberAssetResource(assetId, resource);
+  }
   if (assets[assetId]?.memberOnly) return loadMemberAssetResource(assetId, resource);
   return loadJson(new URL(resource, dataRoot(assetId)), options);
 }
@@ -224,6 +230,10 @@ function watchlistPath() {
 
 function isMember() {
   return isProfileActive(state.memberProfile);
+}
+
+function canUseDca() {
+  return isDcaEnabled(state.memberProfile);
 }
 
 function canAccessAsset(assetId) {
@@ -277,6 +287,15 @@ function normalizeRoute() {
     }
     assetId = "gold";
   }
+  if (route === "dca" && !canUseDca()) {
+    if (isMember()) {
+      state.pendingDcaNotice = true;
+    } else {
+      state.pendingAssetId = assetId;
+      state.pendingRoute = "dca";
+    }
+    route = "overview";
+  }
   state.watchlistView = false;
   state.assetId = assetId;
   const target = routePath(route, assetId);
@@ -290,7 +309,10 @@ function normalizeRoute() {
 }
 
 function updateRouteLinks() {
-  $$('[data-route]').forEach((link) => { link.href = routePath(link.dataset.route); });
+  $$('[data-route]').forEach((link) => {
+    link.href = routePath(link.dataset.route);
+    if (link.dataset.route === "dca") link.hidden = !canUseDca();
+  });
   $$('[data-watchlist-link]').forEach((link) => { link.href = watchlistPath(); });
 }
 
@@ -2320,7 +2342,12 @@ async function handleMemberLogin(event) {
     state.pendingAssetId = null;
     state.pendingRoute = "overview";
     if (pendingAssetId) {
-      await loadAsset(pendingAssetId, { historyMode: "push", targetRoute: pendingRoute });
+      if (pendingRoute === "dca" && !canUseDca()) {
+        window.alert("当前账号未开通定投指标。需要开通时请联系管理员。");
+        await loadAsset(pendingAssetId, { historyMode: "push", targetRoute: "overview" });
+      } else {
+        await loadAsset(pendingAssetId, { historyMode: "push", targetRoute: pendingRoute });
+      }
     }
   } catch (error) {
     errorNode.textContent = memberErrorMessage(error);
@@ -2405,6 +2432,10 @@ async function boot() {
   }
   await loadAsset(state.assetId);
   if (state.pendingAssetId) openMemberLogin(state.pendingAssetId, state.pendingRoute);
+  if (state.pendingDcaNotice) {
+    state.pendingDcaNotice = false;
+    window.alert("当前账号未开通定投指标。需要开通时请联系管理员。");
+  }
 }
 
 lockMobilePageZoom();
@@ -2514,6 +2545,11 @@ document.addEventListener("click", (event) => {
   if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
   const route = routes.has(link.dataset.route) ? link.dataset.route : "overview";
+  if (route === "dca" && !canUseDca()) {
+    if (isMember()) window.alert("当前账号未开通定投指标。需要开通时请联系管理员。");
+    else openMemberLogin(state.assetId, "dca");
+    return;
+  }
   if (location.pathname !== routePath(route)) history.pushState({ assetId: state.assetId, route }, "", routePath(route));
   syncPageMode();
   activateRoute();
@@ -2546,6 +2582,13 @@ window.addEventListener("popstate", () => {
       openMemberLogin(blocked.assetId, blocked.route);
       context = { assetId: "gold", route: "overview" };
     }
+  }
+  if (context.route === "dca" && !canUseDca()) {
+    const blockedAssetId = context.assetId;
+    history.replaceState({ assetId: blockedAssetId, route: "overview" }, "", routePath("overview", blockedAssetId));
+    if (isMember()) window.alert("当前账号未开通定投指标。需要开通时请联系管理员。");
+    else openMemberLogin(blockedAssetId, "dca");
+    context = { assetId: blockedAssetId, route: "overview" };
   }
   if (context.assetId !== state.assetId) {
     void loadAsset(context.assetId, { targetRoute: context.route });
@@ -2629,7 +2672,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.2.9", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.0", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

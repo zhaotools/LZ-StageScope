@@ -177,7 +177,7 @@ export async function validateMemberDeviceSession() {
 async function fetchMemberProfile(session, allowRetry = true) {
   requireMemberConfig();
   const query = new URLSearchParams({
-    select: "user_id,display_name,role,status,expires_at",
+    select: "user_id,display_name,role,status,expires_at,dca_enabled",
     user_id: `eq.${session.user.id}`,
     limit: "1",
   });
@@ -229,6 +229,11 @@ export function isProfileActive(profile, now = new Date()) {
   if (!profile || profile.status !== "active") return false;
   if (profile.role === "admin") return true;
   return Boolean(profile.expires_at && new Date(profile.expires_at).getTime() > now.getTime());
+}
+
+export function isDcaEnabled(profile, now = new Date()) {
+  return isProfileActive(profile, now)
+    && (profile.role === "admin" || profile.dca_enabled === true);
 }
 
 export async function restoreMemberSession() {
@@ -304,11 +309,6 @@ export async function loadMemberAssetResource(assetId, resource) {
 
   const payload = await readPayload(resource);
   if (payload) return payload;
-  if (resource === "dca-series.json") {
-    const dailyPayload = await readPayload("daily-series.json");
-    const embeddedDca = dailyPayload?.memberResources?.["dca-series.json"];
-    if (embeddedDca) return embeddedDca;
-  }
   throw new MemberAuthError("会员资产数据暂时不可用", "member_data_unavailable");
 }
 
