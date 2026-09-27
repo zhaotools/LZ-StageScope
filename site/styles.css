@@ -1076,7 +1076,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .dca-current-zone.tier-80 strong, .dca-current-zone.tier-60 strong { color: var(--green); }
 .dca-current-zone.tier-40 strong, .dca-current-zone.tier-20 strong { color: var(--orange); }
 .dca-current-zone.tier-0 strong { color: var(--red); }
-.dca-recommendation { margin-top: 13px; padding: 12px 13px; border-radius: 9px; background: transparent; }
+.dca-recommendation { margin-top: 13px; padding: 12px 0; border-radius: 9px; background: transparent; }
 .dca-recommendation strong { color: var(--text-deep-gray); font-size: 12px; }
 .dca-recommendation p { margin: 5px 0 0; color: var(--text-deep-gray); font-size: 12px; font-weight: 620; line-height: 1.55; }
 .dca-recommendation small { display: block; margin-top: 5px; color: var(--text-deep-gray); font-size: 12px; line-height: 1.45; }
