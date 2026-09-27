@@ -227,22 +227,30 @@ export async function loadMemberAssetResource(assetId, resource) {
   requireMemberConfig();
   const session = await currentSession();
   if (!session) throw new MemberAuthError("会员登录已失效", "session_expired");
-  const query = new URLSearchParams({
-    select: "payload",
-    asset_id: `eq.${assetId}`,
-    resource: `eq.${resource}`,
-    limit: "1",
-  });
-  const response = await fetch(`${MEMBER_CONFIG.supabaseUrl}/rest/v1/asset_snapshots?${query}`, {
-    headers: authHeaders(session.accessToken),
-    credentials: "omit",
-    cache: "no-store",
-  });
-  const rows = await readResponse(response);
-  if (!Array.isArray(rows) || !rows[0]?.payload) {
-    throw new MemberAuthError("会员资产数据暂时不可用", "member_data_unavailable");
+  const readPayload = async (requestedResource) => {
+    const query = new URLSearchParams({
+      select: "payload",
+      asset_id: `eq.${assetId}`,
+      resource: `eq.${requestedResource}`,
+      limit: "1",
+    });
+    const response = await fetch(`${MEMBER_CONFIG.supabaseUrl}/rest/v1/asset_snapshots?${query}`, {
+      headers: authHeaders(session.accessToken),
+      credentials: "omit",
+      cache: "no-store",
+    });
+    const rows = await readResponse(response);
+    return Array.isArray(rows) ? rows[0]?.payload || null : null;
+  };
+
+  const payload = await readPayload(resource);
+  if (payload) return payload;
+  if (resource === "dca-series.json") {
+    const dailyPayload = await readPayload("daily-series.json");
+    const embeddedDca = dailyPayload?.memberResources?.["dca-series.json"];
+    if (embeddedDca) return embeddedDca;
   }
-  return rows[0].payload;
+  throw new MemberAuthError("会员资产数据暂时不可用", "member_data_unavailable");
 }
 
 export async function loadMemberAssets() {

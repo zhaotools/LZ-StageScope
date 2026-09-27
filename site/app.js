@@ -15,11 +15,11 @@ import {
   signOutMember,
   updateMemberDisplayName,
   updateMemberPassword,
-} from "./member-auth.js?v=1.1.0";
+} from "./member-auth.js?v=1.1.1";
 
 const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
-const routes = new Set(["overview", "weekly", "daily", "fundamentals", "methodology"]);
+const routes = new Set(["overview", "weekly", "daily", "dca", "fundamentals", "methodology"]);
 const mobileLayout = window.matchMedia("(max-width: 760px)");
 let forceInitialMobileWatchlist = mobileLayout.matches;
 const assets = {
@@ -46,6 +46,7 @@ const state = {
   current: null,
   daily: null,
   weekly: null,
+  dca: null,
   fundamentals: null,
   news: null,
   charts: new Map(),
@@ -934,7 +935,7 @@ function clearCharts() {
     chart?.remove?.();
   });
   state.charts.clear();
-  for (const id of ["weekly-chart", "daily-chart"]) {
+  for (const id of ["weekly-chart", "daily-chart", "dca-chart"]) {
     const container = document.getElementById(id);
     if (container) container.replaceChildren();
   }
@@ -1067,6 +1068,17 @@ async function ensureRouteData(route, { force = false } = {}) {
       await loadChartLibrary();
       requestAnimationFrame(renderDailyChart);
     }
+    if (route === "dca") {
+      state.dca = force || !state.dca
+        ? await loadAssetResource(assetId, "dca-series.json")
+        : state.dca;
+      if (assetId !== state.assetId) return;
+      renderDca();
+      if (!state.dca.historyLimited) {
+        await loadChartLibrary();
+        requestAnimationFrame(renderDcaChart);
+      }
+    }
     if (route === "fundamentals") {
       const fundamentalsPromise = force || !state.fundamentals
         ? loadAssetResource(assetId, "fundamentals.json")
@@ -1142,6 +1154,7 @@ function updateHeader() {
   $("#module-tabs").setAttribute("aria-label", `${presentation.name}分析模块`);
   $("#weekly-chart").setAttribute("aria-label", `${presentation.name}周线价格图`);
   $("#daily-chart").setAttribute("aria-label", `${presentation.name}日线价格图`);
+  $("#dca-chart").setAttribute("aria-label", `${presentation.name}价格与 LZ-DCA 走势图`);
   const delta = Number(quote.price) - Number(quote.previousClose);
   const percent = Number(quote.previousClose) ? (delta / Number(quote.previousClose)) * 100 : 0;
   $("#asset-benchmark").textContent = ["cn_equity", "hk_equity"].includes(presentation.category)
@@ -1482,17 +1495,83 @@ function renderFundamentals() {
   renderRecentNews();
 }
 
+function dcaTierClass(value) {
+  const tier = Number(value);
+  return [0, 20, 40, 60, 80, 100].includes(tier) ? `tier-${tier}` : "tier-40";
+}
+
+function renderDca() {
+  const dca = state.dca;
+  if (!dca) return;
+  const current = dca.current || {};
+  const currency = state.current?.quote?.currency || assets[state.assetId]?.currency || "USD";
+  const historyLimited = Boolean(dca.historyLimited);
+  const reasons = current.heatConfirmed ? current.heatReasons : current.coldConfirmed ? current.coldReasons : [];
+  $("#dca-current").innerHTML = `
+    <span class="panel-kicker">TODAY'S DCA</span>
+    <h2 class="dca-current-title">今日定投建议</h2>
+    <div class="dca-current-value ${esc(dcaTierClass(current.amountTier))}">
+      <strong>${fmt(current.lzDca, 2)}</strong><span>LZ-DCA</span>
+    </div>
+    <div class="dca-current-zone ${esc(dcaTierClass(current.amountTier))}">
+      <span>${esc(current.zone || "待判断")}</span><strong>${esc(current.amountLabel || "—")} · ${fmt(current.amountTier, 0)}</strong>
+    </div>
+    <dl class="stat-list">
+      <div><dt>确认日期</dt><dd>${esc(fmtDate(current.date || dca.asOf))}</dd></div>
+      <div><dt>确认收盘</dt><dd>${fmt(current.price, 2)} ${esc(currency)}</dd></div>
+      <div><dt>融合状态</dt><dd>${esc(current.fusionStatus || "—")}</dd></div>
+      <div><dt>指标三状态</dt><dd>${esc(current.bandStatus || "—")}</dd></div>
+      <div><dt>综合评分</dt><dd>${fmt(current.score, 0)} / 100</dd></div>
+    </dl>
+    <div class="dca-recommendation ${esc(dcaTierClass(current.amountTier))}">
+      <strong>规则建议</strong>
+      <p>${esc(current.recommendation || "等待完成日线后更新。")}</p>
+      <small>${esc(current.zoneAction || "")}</small>
+    </div>
+    ${reasons.length ? `<p class="dca-confirmation">严格信号确认：${reasons.map(esc).join("；")}</p>` : ""}
+    ${historyLimited ? `<p class="dca-history-warning">${esc((dca.warnings || [])[0] || "历史数据不足，仅展示当前建议。")}</p>` : ""}
+  `;
+
+  const distribution = [...(dca.statistics?.tierDistribution || [])]
+    .sort((left, right) => Number(right.amountTier) - Number(left.amountTier));
+  $("#dca-statistics-period").textContent = dca.statistics?.period || (historyLimited ? "历史不足" : "近4年");
+  $("#dca-tier-statistics").innerHTML = distribution.length ? distribution.map((item) => `
+    <article class="dca-tier-card ${esc(dcaTierClass(item.amountTier))}">
+      <span>${esc(item.label)}</span>
+      <strong>${fmt(item.amountTier, 0)}</strong>
+      <p>${fmt(item.days, 0)} 天 · ${fmt(Number(item.share) * 100, 1)}%</p>
+    </article>
+  `).join("") : `<p class="dca-empty-copy">有效历史不足，暂不生成区间统计。</p>`;
+
+  const signals = [...(dca.signals || [])].sort((left, right) => String(right.date).localeCompare(String(left.date)));
+  $("#dca-signal-count").textContent = historyLimited ? "历史不足" : `${signals.length} 个确认信号`;
+  $("#dca-signal-list").innerHTML = signals.length ? signals.map((item) => `
+    <tr>
+      <td>${esc(fmtDate(item.date))}</td>
+      <td class="number-cell">${fmt(item.lzDca, 2)}</td>
+      <td class="number-cell">${fmt(item.price, 2)}</td>
+      <td><span class="dca-signal-chip ${item.type === "low" ? "low" : "high"}">${esc(item.label)}</span>${item.reasons?.length ? `<small>${item.reasons.map(esc).join("；")}</small>` : ""}</td>
+    </tr>
+  `).join("") : `<tr><td class="empty-history" colspan="4">${historyLimited ? "有效历史不足，暂不生成历史信号。" : "近4年没有满足严格确认条件的重要信号。"}</td></tr>`;
+
+  if (historyLimited) {
+    $("#dca-chart").innerHTML = `<div class="dca-chart-unavailable"><strong>历史图表暂不可用</strong><span>旧版 LZ-DCA 需要至少 ${fmt(dca.historyMeta?.requiredForFullHistory, 0)} 根有效日线生成可比历史。</span></div>`;
+  }
+}
+
 function renderMethodology() {
   const engines = state.current?.engines || {
     weekly: { name: "LZ-4Stage", version: "LZAS-W-1.0.0" },
     daily: { name: "LZ-Status-V3", version: "LZAS-D-1.0.0" },
+    dca: { name: "LZ-DCA", version: "LZAS-DCA-1.1.0", baseline: "v1.1" },
   };
   $("#provenance-panel").innerHTML = `
     <div class="panel-heading"><span class="panel-kicker">PROVENANCE</span><h2>可追溯信息</h2></div>
     <div class="provenance-grid">
       <div class="code-block">周线引擎<br>${esc(engines.weekly.name)}<br>内部版本: ${esc(engines.weekly.version)}</div>
       <div class="code-block">日线引擎<br>${esc(engines.daily.name)}<br>内部版本: ${esc(engines.daily.version)}</div>
-      <div class="code-block">统一输入原则<br>同一份标准化 OHLC<br>日线与周线同源</div>
+      <div class="code-block">定投引擎<br>${esc(engines.dca?.name || "LZ-DCA")} · ${esc(engines.dca?.baseline || "v1.1")}<br>内部版本: ${esc(engines.dca?.version || "LZAS-DCA-1.1.0")}</div>
+      <div class="code-block">统一输入原则<br>同一份标准化 OHLC<br>周线、日线与定投同源</div>
       <div class="code-block">周期确认原则<br>只使用完成周线<br>只使用确认收盘日线</div>
       <div class="code-block">数据状态原则<br>缺失与沿用明确标识<br>不把缺失数据解释为中性</div>
       <div class="code-block">自动更新机制<br>GitHub 08:08 主更新<br>Cloudflare 08:28 兜底检查</div>
@@ -1512,7 +1591,12 @@ function chartApi(container, kind) {
       borderColor: "rgba(16,40,59,.12)",
       scaleMargins: kind === "daily" ? { top: 0.08, bottom: 0.3 } : { top: 0.14, bottom: 0.1 },
     },
-    timeScale: { borderColor: "rgba(16,40,59,.12)", timeVisible: kind === "daily" },
+    leftPriceScale: {
+      visible: kind === "dca",
+      borderColor: "rgba(16,40,59,.12)",
+      scaleMargins: { top: 0.08, bottom: 0.08 },
+    },
+    timeScale: { borderColor: "rgba(16,40,59,.12)", timeVisible: kind === "daily" || kind === "dca" },
     crosshair: { vertLine: { color: "rgba(36,120,165,.36)" }, horzLine: { color: "rgba(36,120,165,.36)" } },
   });
   const addCandle = (options) => chart.addCandlestickSeries
@@ -1606,6 +1690,48 @@ function installStageBackground(container, chart, series) {
   };
   chart.timeScale().subscribeVisibleLogicalRangeChange?.(redraw);
   requestAnimationFrame(redraw);
+  return redraw;
+}
+
+function installDcaBands(container, chart, dcaLine, bands) {
+  const backgroundLayer = document.createElement("div");
+  const labelLayer = document.createElement("div");
+  backgroundLayer.className = "dca-background-layer";
+  labelLayer.className = "dca-band-label-layer";
+  container.prepend(backgroundLayer);
+  container.append(labelLayer);
+  const floor = 0.3;
+  const ceiling = 2.5;
+
+  const redraw = () => {
+    backgroundLayer.replaceChildren();
+    labelLayer.replaceChildren();
+    (bands || []).forEach((band) => {
+      const minimum = band.minimum == null ? floor : Number(band.minimum);
+      const maximum = band.maximum == null ? ceiling : Number(band.maximum);
+      const topCoordinate = dcaLine.priceToCoordinate(maximum);
+      const bottomCoordinate = dcaLine.priceToCoordinate(minimum);
+      if (!Number.isFinite(topCoordinate) || !Number.isFinite(bottomCoordinate)) return;
+      const top = Math.max(0, Math.min(topCoordinate, bottomCoordinate));
+      const bottom = Math.min(container.clientHeight, Math.max(topCoordinate, bottomCoordinate));
+      const height = bottom - top;
+      if (height <= 0) return;
+      const zone = document.createElement("span");
+      zone.className = `dca-band-zone ${dcaTierClass(band.amountTier)}`;
+      zone.style.top = `${top}px`;
+      zone.style.height = `${height}px`;
+      backgroundLayer.append(zone);
+      if (height >= 24) {
+        const label = document.createElement("span");
+        label.className = `dca-band-label ${dcaTierClass(band.amountTier)}`;
+        label.style.top = `${top + Math.min(10, Math.max(4, height / 4))}px`;
+        label.textContent = `${band.amountTier} · ${band.label}`;
+        labelLayer.append(label);
+      }
+    });
+  };
+  chart.timeScale().subscribeVisibleLogicalRangeChange?.(redraw);
+  requestAnimationFrame(() => requestAnimationFrame(redraw));
   return redraw;
 }
 
@@ -1837,6 +1963,80 @@ function renderDailyChart() {
   );
 }
 
+function renderDcaChart() {
+  const id = "dca-chart";
+  const dca = state.dca;
+  const series = dca?.series || [];
+  const priceSeries = dca?.priceSeries || [];
+  if (state.charts.has(id) || dca?.historyLimited || !series.length || !priceSeries.length) return;
+  const container = document.getElementById(id);
+  if (!container || container.clientWidth === 0) return;
+  const api = chartApi(container, "dca");
+  if (!api) {
+    container.innerHTML = '<p class="muted-copy">图表组件未能加载，定投建议仍可正常阅读。</p>';
+    return;
+  }
+  const candle = api.addCandle({
+    priceScaleId: "right",
+    upColor: "#16835d",
+    downColor: "#c94f55",
+    borderVisible: false,
+    wickUpColor: "#16835d",
+    wickDownColor: "#c94f55",
+    priceLineVisible: false,
+    lastValueVisible: true,
+  });
+  candle.setData(priceSeries.map((bar) => ({
+    time: bar.date || bar.time,
+    open: Number(bar.open), high: Number(bar.high), low: Number(bar.low), close: Number(bar.close),
+  })));
+  const dcaLine = api.addLine({
+    priceScaleId: "left",
+    color: "#2478a5",
+    lineWidth: 2,
+    title: "LZ-DCA",
+    priceLineVisible: true,
+    lastValueVisible: true,
+    priceFormat: { type: "price", precision: 2, minMove: 0.01 },
+  });
+  dcaLine.setData(series.map((item) => ({ time: item.date || item.time, value: Number(item.lzDca) })));
+  const anchors = api.addLine({
+    priceScaleId: "left",
+    color: "rgba(0,0,0,0)",
+    lineWidth: 1,
+    lineVisible: false,
+    priceLineVisible: false,
+    lastValueVisible: false,
+    crosshairMarkerVisible: false,
+  });
+  anchors.setData([
+    { time: series[0].date || series[0].time, value: 0.3 },
+    { time: series.at(-1).date || series.at(-1).time, value: 2.5 },
+  ]);
+  api.chart.priceScale("left").applyOptions({
+    visible: true,
+    borderColor: "rgba(16,40,59,.12)",
+    scaleMargins: { top: 0.08, bottom: 0.08 },
+  });
+  api.chart.priceScale("right").applyOptions({
+    visible: true,
+    borderColor: "rgba(16,40,59,.12)",
+    scaleMargins: { top: 0.08, bottom: 0.08 },
+  });
+  api.chart.timeScale().fitContent();
+  const redrawBands = installDcaBands(container, api.chart, dcaLine, dca.bands);
+  const redrawAfterInteraction = () => requestAnimationFrame(() => requestAnimationFrame(redrawBands));
+  container.addEventListener("pointermove", (event) => { if (event.buttons) redrawAfterInteraction(); }, { capture: true });
+  container.addEventListener("wheel", redrawAfterInteraction, { capture: true, passive: true });
+  container.addEventListener("dblclick", redrawAfterInteraction, { capture: true });
+  const observer = new ResizeObserver(() => {
+    api.chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+    redrawAfterInteraction();
+  });
+  observer.observe(container);
+  state.charts.set(id, { ...api, candle, dcaLine, anchors, observer, redrawDecoration: redrawBands });
+}
+
 async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFromLocation() } = {}) {
   if (!assets[assetId]) return;
   const route = routes.has(targetRoute) ? targetRoute : "overview";
@@ -1850,6 +2050,7 @@ async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFro
   state.current = null;
   state.daily = null;
   state.weekly = null;
+  state.dca = null;
   state.fundamentals = null;
   state.news = null;
   state.routeLoads.clear();
@@ -2221,7 +2422,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.1.8", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.2.1", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

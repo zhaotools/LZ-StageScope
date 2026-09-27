@@ -1,10 +1,10 @@
-const CACHE = "lz-stagescope-v1.1.12";
+const CACHE = "lz-stagescope-v1.2.1";
 const SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.1.5",
-  "./app.js?v=1.1.8",
-  "./member-auth.js?v=1.1.0",
+  "./styles.css?v=1.2.1",
+  "./app.js?v=1.2.1",
+  "./member-auth.js?v=1.1.1",
   "./member-config.js?v=1.0.17",
   "./manifest.webmanifest",
   "./favicon.ico",
@@ -62,7 +62,7 @@ async function navigationFirst(request) {
     : "";
   const route = relativePath === "watchlist"
     ? "/watchlist"
-    : /^[a-z0-9-]+\/(overview|weekly|daily|fundamentals|methodology)$/.test(relativePath)
+      : /^[a-z0-9-]+\/(overview|weekly|daily|dca|fundamentals|methodology)$/.test(relativePath)
       ? `/${relativePath}`
       : "/watchlist";
   const shellUrl = new URL("./", scopeUrl);

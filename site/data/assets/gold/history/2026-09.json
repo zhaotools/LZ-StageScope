@@ -522,7 +522,7 @@
     },
     {
       "date": "2026-09-25",
-      "generatedAt": "2026-09-27T05:11:17+00:00",
+      "generatedAt": "2026-09-27T07:17:41+00:00",
       "inputHash": "158a7c9db0fa446cb7dfa1853b296f5fca5faae9c1fff5b26b61daca60fa06d7",
       "asset": {
         "symbol": "GC=F",
@@ -653,7 +653,7 @@
         "summary": {
           "ok": true,
           "snapshotId": "158a7c9db0fa446c",
-          "snapshotCreatedAt": "2026-09-27T05:11:06+00:00",
+          "snapshotCreatedAt": "2026-09-27T07:17:27+00:00",
           "symbol": "GC=F",
           "name": "COMEX 黄金连续合约",
           "market": "commodity",
@@ -670,7 +670,7 @@
           "volume": 164814.0,
           "date": "2026-09-25",
           "quoteDate": "2026-09-25",
-          "updatedAt": "2026-09-27T05:11:06+00:00",
+          "updatedAt": "2026-09-27T07:17:27+00:00",
           "bullBear": {
             "status": "熊市区",
             "score": 5,
@@ -741,6 +741,38 @@
           }
         },
         "change": "日线融合状态维持“风险升高”。"
+      },
+      "dca": {
+        "asOf": "2026-09-25",
+        "historyLimited": false,
+        "current": {
+          "date": "2026-09-25",
+          "price": 4321.2001953125,
+          "ma200": 4556.055501708985,
+          "score": 5,
+          "fusionStatus": "风险升高",
+          "bandStatus": "超卖观察",
+          "indicator3Score": 0,
+          "lzDca": 0.41,
+          "zone": "抄底区",
+          "zoneColor": "deep-blue",
+          "amountTier": 100,
+          "amountLabel": "重点",
+          "heatConfirmed": false,
+          "heatReasonCount": 0,
+          "heatReasons": [],
+          "recentHotDays": 0,
+          "coldConfirmed": false,
+          "coldReasonCount": 1,
+          "coldReasons": [
+            "近 10 日 StochRSI 低位 5 天"
+          ],
+          "recentColdDays": 1,
+          "recommendation": "温度较低，当前规则建议重点投入。",
+          "zoneAction": "加倍定投（3倍标准金额）",
+          "zoneDescription": "综合评分处于极低区间，市场状态偏冷，定投性价比相对更高"
+        },
+        "summary": "LZ-DCA 0.41，重点档 100。"
       },
       "fundamentals": {
         "asOf": "2026-09-25",

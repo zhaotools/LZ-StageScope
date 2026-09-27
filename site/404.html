@@ -9,7 +9,7 @@
     <link rel="icon" href="/LZ-StageScope/icons/favicon-32-v3.png" type="image/png" sizes="32x32">
     <script>
       const watchlist = /\/watchlist\/?$/.test(location.pathname);
-      const match = location.pathname.match(/\/([a-z0-9-]+)\/(overview|weekly|daily|fundamentals|methodology)\/?$/);
+      const match = location.pathname.match(/\/([a-z0-9-]+)\/(overview|weekly|daily|dca|fundamentals|methodology)\/?$/);
       const asset = match ? match[1] : "gold";
       const route = match ? match[2] : "overview";
       location.replace("/LZ-StageScope/?route=" + encodeURIComponent(watchlist ? "/watchlist" : `/${asset}/${route}`));
