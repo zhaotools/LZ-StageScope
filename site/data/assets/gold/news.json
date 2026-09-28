@@ -1,17 +1,17 @@
 {
   "schemaVersion": "asset-news-v1",
   "asset": "gold",
-  "generatedAt": "2026-09-28T05:14:56+00:00",
+  "generatedAt": "2026-09-28T05:56:44+00:00",
   "asOf": "2026-09-28",
   "status": "ok",
   "maxItems": 5,
   "items": [
     {
-      "id": "202609283884877246",
-      "title": "黄金ETF站在十字路口：加仓还是赎回？",
+      "id": "202609283885097248",
+      "title": "金价破4200美元，黄金ETF资金转向，机构建议逢跌分批建仓",
       "publisher": "21世纪经济报道",
-      "publishedAt": "2026-09-28T01:37:25Z",
-      "url": "https://stock.eastmoney.com/a/202609283884877246.html",
+      "publishedAt": "2026-09-28T04:47:37Z",
+      "url": "https://finance.eastmoney.com/a/202609283885097248.html",
       "eventType": "资金与持仓",
       "selectionReason": "中文报道涉及资金与持仓，且标题与该资产直接相关。",
       "relatedTickers": [

@@ -1721,6 +1721,21 @@ function chartApi(container, kind) {
   return { chart, addCandle, addLine };
 }
 
+function installDataZoomBoundary(container, chart, pointCount) {
+  const apply = () => {
+    const timeScale = chart.timeScale();
+    const plotWidth = Number(timeScale.width?.()) || container.clientWidth;
+    if (!plotWidth || !pointCount) return;
+    timeScale.applyOptions({
+      fixLeftEdge: true,
+      minBarSpacing: Math.max(0.5, plotWidth / pointCount),
+    });
+  };
+  apply();
+  requestAnimationFrame(apply);
+  return apply;
+}
+
 function stageNumber(value) {
   const match = String(value ?? "").match(/[1-4]/);
   return match ? Number(match[0]) : null;
@@ -2114,6 +2129,9 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
     const latestDate = series.at(-1)?.date || series.at(-1)?.time;
     if (latestDate) api.chart.timeScale().setVisibleRange({ from: shiftIsoMonths(latestDate, -options.visibleMonths), to: latestDate });
   }
+  const applyZoomBoundary = options.limitZoomToData
+    ? installDataZoomBoundary(container, api.chart, series.length)
+    : () => {};
   const decorationRedraws = [];
   if (options.stageBackground) decorationRedraws.push(installStageBackground(container, api.chart, series));
   if (options.stageTransitions?.length) {
@@ -2133,7 +2151,10 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
   container.addEventListener("dblclick", redrawAfterChartInteraction, { capture: true });
   const observer = new ResizeObserver(() => {
     api.chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-    requestAnimationFrame(redrawDecoration);
+    requestAnimationFrame(() => {
+      applyZoomBoundary();
+      redrawDecoration();
+    });
   });
   observer.observe(container);
   state.charts.set(id, { ...api, candle, observer, redrawDecoration });
@@ -2149,7 +2170,7 @@ function renderWeeklyChart() {
     completedSeries,
     [["ma30", "#2478a5", "MA30"]],
     "weekly",
-    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, visibleMonths: 48 },
+    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, visibleMonths: 48, limitZoomToData: true },
   );
 }
 
@@ -2160,7 +2181,7 @@ function renderDailyChart() {
     series,
     [["ma20", "#a87320", "MA20"], ["ma50", "#2478a5", "MA50"], ["ma200", "#6e5b9e", "MA200"]],
     "daily",
-    { bandHistory: state.daily?.bandHistory, movingAverageLabels: false, stochRsi: true, visibleMonths: 4 },
+    { bandHistory: state.daily?.bandHistory, movingAverageLabels: false, stochRsi: true, visibleMonths: 4, limitZoomToData: true },
   );
 }
 
@@ -2751,7 +2772,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.0", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.1", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
