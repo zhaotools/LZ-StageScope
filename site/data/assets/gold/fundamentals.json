@@ -1,6 +1,6 @@
 {
   "schemaVersion": "gold-fundamentals-v1",
-  "generatedAt": "2026-09-27T16:28:02+00:00",
+  "generatedAt": "2026-09-28T01:15:12+00:00",
   "asset": "gold",
   "scope": "macro-minimum",
   "factors": [
@@ -29,8 +29,8 @@
       },
       "explanation": "实际利率上升通常提高持有黄金的机会成本。",
       "freshness": {
-        "calendarDays": 3,
-        "businessDays": 1
+        "calendarDays": 4,
+        "businessDays": 2
       },
       "status": "ok"
     },
@@ -59,8 +59,8 @@
       },
       "explanation": "名义长端利率上升通常对无息资产估值构成压力。",
       "freshness": {
-        "calendarDays": 3,
-        "businessDays": 1
+        "calendarDays": 4,
+        "businessDays": 2
       },
       "status": "ok"
     },
@@ -89,8 +89,8 @@
       },
       "explanation": "通胀预期上升通常增加黄金的通胀对冲需求，但仍需结合实际利率判断。",
       "freshness": {
-        "calendarDays": 2,
-        "businessDays": 0
+        "calendarDays": 3,
+        "businessDays": 1
       },
       "status": "ok"
     },
@@ -119,8 +119,8 @@
       },
       "explanation": "美元走强通常对美元计价黄金形成压力。",
       "freshness": {
-        "calendarDays": 9,
-        "businessDays": 5
+        "calendarDays": 10,
+        "businessDays": 6
       },
       "status": "ok"
     }
@@ -146,8 +146,8 @@
   "recentNews": {
     "schemaVersion": "asset-news-v1",
     "asset": "gold",
-    "generatedAt": "2026-09-27T16:28:04+00:00",
-    "asOf": "2026-09-27",
+    "generatedAt": "2026-09-28T01:15:14+00:00",
+    "asOf": "2026-09-28",
     "status": "ok",
     "maxItems": 5,
     "items": [

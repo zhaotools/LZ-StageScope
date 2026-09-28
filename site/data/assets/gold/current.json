@@ -1,6 +1,6 @@
 {
   "schemaVersion": "asset-snapshot-v1",
-  "generatedAt": "2026-09-27T16:28:09+00:00",
+  "generatedAt": "2026-09-28T01:15:18+00:00",
   "productionReady": true,
   "asset": {
     "id": "gold",
@@ -33,7 +33,7 @@
       "dailyBoundary": "Yahoo Finance provider-defined GC=F daily bar; accepted after 18:00 America/New_York",
       "volumeSemantics": "provider-reported COMEX gold-futures volume; contract rolls can change comparability",
       "volumeRuleStatus": "exchange-volume-available",
-      "fetchedAt": "2026-09-27T16:27:51+00:00",
+      "fetchedAt": "2026-09-28T01:15:00+00:00",
       "observationDate": "2026-09-25"
     }
   },
@@ -162,7 +162,7 @@
     "summary": {
       "ok": true,
       "snapshotId": "158a7c9db0fa446c",
-      "snapshotCreatedAt": "2026-09-27T16:27:56+00:00",
+      "snapshotCreatedAt": "2026-09-28T01:15:07+00:00",
       "symbol": "GC=F",
       "name": "COMEX 黄金连续合约",
       "market": "commodity",
@@ -179,7 +179,7 @@
       "volume": 164814.0,
       "date": "2026-09-25",
       "quoteDate": "2026-09-25",
-      "updatedAt": "2026-09-27T16:27:56+00:00",
+      "updatedAt": "2026-09-28T01:15:07+00:00",
       "bullBear": {
         "status": "熊市区",
         "score": 5,
@@ -281,8 +281,8 @@
         },
         "explanation": "实际利率上升通常提高持有黄金的机会成本。",
         "freshness": {
-          "calendarDays": 3,
-          "businessDays": 1
+          "calendarDays": 4,
+          "businessDays": 2
         },
         "status": "ok"
       },
@@ -311,8 +311,8 @@
         },
         "explanation": "名义长端利率上升通常对无息资产估值构成压力。",
         "freshness": {
-          "calendarDays": 3,
-          "businessDays": 1
+          "calendarDays": 4,
+          "businessDays": 2
         },
         "status": "ok"
       },
@@ -341,8 +341,8 @@
         },
         "explanation": "通胀预期上升通常增加黄金的通胀对冲需求，但仍需结合实际利率判断。",
         "freshness": {
-          "calendarDays": 2,
-          "businessDays": 0
+          "calendarDays": 3,
+          "businessDays": 1
         },
         "status": "ok"
       },
@@ -371,8 +371,8 @@
         },
         "explanation": "美元走强通常对美元计价黄金形成压力。",
         "freshness": {
-          "calendarDays": 9,
-          "businessDays": 5
+          "calendarDays": 10,
+          "businessDays": 6
         },
         "status": "ok"
       }
@@ -475,7 +475,7 @@
     "marketFreshness": {
       "sourceFresh": true,
       "expectedSessionDate": "2026-09-25",
-      "providerRegularMarketDate": "2026-09-25",
+      "providerRegularMarketDate": "2026-09-27",
       "lastDate": "2026-09-25",
       "lagDays": 0,
       "freshnessBasis": "provider-regular-market-time"
