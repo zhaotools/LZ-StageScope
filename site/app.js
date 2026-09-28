@@ -422,7 +422,7 @@ function watchlistQuote(snapshot) {
 
 function watchlistWeekly(snapshot, fallbackStatus) {
   const confirmed = snapshot?.weekly?.current?.confirmed;
-  const code = confirmed?.code || snapshot?.weekly?.current?.observation?.code;
+  const code = confirmed?.label || confirmed?.code;
   const weeks = Number(confirmed?.weeks);
   if (code) return `${code}${Number.isFinite(weeks) ? ` · ${weeks}周` : ""}`;
   return fallbackStatus === "initializing" ? "初始化中" : fallbackStatus === "failed" ? "失败" : "—";
@@ -1282,10 +1282,10 @@ function updateHeader() {
 function renderOverview() {
   const { current } = state;
   $("#overview-headline").textContent = current.synthesis.headline;
-  const weeklyObservation = current.weekly.current.observation || {};
-  const weeklyStage = Number(weeklyObservation.primaryStage || current.weekly.current.confirmed?.primary);
+  const weeklyConfirmed = current.weekly.current.confirmed || {};
+  const weeklyStage = Number(weeklyConfirmed.primary || weeklyConfirmed.stage);
   const weeklyStageTitle = stagePresentation[weeklyStage]?.title || "";
-  const weeklyLabel = [weeklyObservation.label || "未确认", weeklyStageTitle].filter(Boolean).join(" ");
+  const weeklyLabel = [weeklyConfirmed.label || weeklyConfirmed.code || "未确认", weeklyStageTitle].filter(Boolean).join(" ");
   const fundamentalHealth = current.fundamentals.health || {};
   const staleCount = Number(fundamentalHealth.staleCount || current.quality.dataHealth?.staleFundamentalCount || 0);
   const metrics = [
@@ -1346,21 +1346,27 @@ function renderOverview() {
 
 function renderWeekly() {
   const current = state.current.weekly.current;
-  const stageTone = signalClass(current.observation?.label);
-  const currentPrimaryStage = Number(current.observation?.primaryStage || current.confirmed?.primary);
-  const currentStageTitle = stagePresentation[currentPrimaryStage]?.title || "";
   const confirmed = current.confirmed || {};
+  const observation = current.observation || {};
+  const confirmedLabel = confirmed.label || confirmed.code || "未确认";
+  const stageTone = signalClass(confirmedLabel);
+  const currentPrimaryStage = Number(confirmed.primary || confirmed.stage);
+  const currentStageTitle = stagePresentation[currentPrimaryStage]?.title || "";
+  const observationPrimaryStage = Number(observation.primaryStage || observation.primary || observation.rawStage);
+  const observationLabel = stagePresentation[observationPrimaryStage]?.code || "未确认";
+  const slope = Number(current.slope);
+  const ma30Direction = Number.isFinite(slope) ? (slope > 0 ? "上升" : slope < 0 ? "下降" : "持平") : "—";
+  const ma30Trend = Number.isFinite(slope)
+    ? `${ma30Direction} 5周${(Math.abs(slope) * 100).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}%`
+    : "—";
   $("#weekly-stats").innerHTML = `
     <span class="panel-kicker">CURRENT STAGE</span>
-    <div class="big-state ${stageTone}"><span>${esc(current.observation?.label || "未确认")}</span>${currentStageTitle ? `<small>${esc(currentStageTitle)}</small>` : ""}</div>
+    <div class="big-state ${stageTone}"><span>${esc(confirmedLabel)}</span>${currentStageTitle ? `<small>${esc(currentStageTitle)}</small>` : ""}</div>
     <dl class="stat-list">
-      <div><dt>已确认主阶段</dt><dd>${esc(confirmed.label || "—")}</dd></div>
-      <div><dt>持续周数</dt><dd>${esc(confirmed.weeks ?? "—")}</dd></div>
-      <div><dt>周收盘</dt><dd>${fmt(current.close, 1)}</dd></div>
-      <div><dt>MA10</dt><dd>${fmt(current.ma10, 1)}</dd></div>
-      <div><dt>MA30</dt><dd>${fmt(current.ma30, 1)}</dd></div>
-      <div><dt>MA30五周斜率</dt><dd>${fmt(Number(current.slope) * 100, 2)}%</dd></div>
-      <div><dt>证据置信度</dt><dd>${fmt(current.confidence, 0)}%</dd></div>
+      <div><dt>当前阶段</dt><dd>${esc(confirmedLabel)}</dd></div>
+      <div><dt>主阶段持续</dt><dd>${Number.isFinite(Number(confirmed.weeks)) ? `${esc(confirmed.weeks)}周` : "—"}</dd></div>
+      <div><dt>本周观察</dt><dd>${esc(observationLabel)}</dd></div>
+      <div><dt>30周均线</dt><dd>${esc(ma30Trend)}</dd></div>
     </dl>
     <div class="metric-track" aria-label="证据置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
     <p class="explanation">${esc(current.explanation || current.observation?.reason || "")}</p>
@@ -2778,7 +2784,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.2", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.3", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
