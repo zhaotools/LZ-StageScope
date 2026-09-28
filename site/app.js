@@ -1862,6 +1862,48 @@ function installDcaGuideLabels(container, chart, dcaLine, guides) {
   return redraw;
 }
 
+function installDcaSignalTooltips(container, chart, dcaLine, signals, assetCode) {
+  const layer = document.createElement("div");
+  layer.className = "dca-signal-tooltip-layer";
+  container.append(layer);
+
+  const redraw = () => {
+    layer.replaceChildren();
+    (signals || []).forEach((signal) => {
+      const x = chart.timeScale().timeToCoordinate(signal.date);
+      const y = dcaLine.priceToCoordinate(Number(signal.lzDca));
+      if (!Number.isFinite(x) || !Number.isFinite(y) || x < -20 || x > container.clientWidth + 20) return;
+      const target = document.createElement("button");
+      target.type = "button";
+      target.className = `dca-signal-tooltip-target ${signal.type === "high" ? "high" : "low"} ${y < 150 ? "below" : "above"}`;
+      target.style.left = `${x}px`;
+      target.style.top = `${y}px`;
+      const tooltip = document.createElement("span");
+      tooltip.className = "dca-signal-tooltip";
+      if (x < 145) tooltip.classList.add("align-left");
+      if (x > container.clientWidth - 145) tooltip.classList.add("align-right");
+      const tooltipRows = [
+        ["日期", fmtDate(signal.date)],
+        ["LZ-DCA", fmt(signal.lzDca, 2)],
+        ["资产代码", assetCode || "—"],
+        ["资产价格", fmt(signal.price, 2)],
+        ["类别", signal.label || (signal.type === "high" ? "高位保护点" : "低位关注点")],
+      ];
+      tooltipRows.forEach(([key, value]) => {
+        const row = document.createElement("span");
+        row.textContent = `${key}：${value}`;
+        tooltip.append(row);
+      });
+      target.setAttribute("aria-label", tooltipRows.map(([key, value]) => `${key}：${value}`).join("；"));
+      target.append(tooltip);
+      layer.append(target);
+    });
+  };
+  chart.timeScale().subscribeVisibleLogicalRangeChange?.(redraw);
+  requestAnimationFrame(() => requestAnimationFrame(redraw));
+  return redraw;
+}
+
 function installStageTransitions(container, chart, candle, series, history) {
   const layer = document.createElement("div");
   layer.className = "stage-transition-layer";
@@ -2217,9 +2259,14 @@ function renderDcaChart() {
   applyDcaTimeRange(api.chart, series);
   const redrawBands = installDcaBands(container, api.chart, dcaLine, dca.bands);
   const redrawGuideLabels = installDcaGuideLabels(container, api.chart, dcaLine, dcaTemperatureGuides);
+  const asset = assets[state.assetId] || {};
+  const assetCurrency = state.current?.quote?.currency || asset.currency || "";
+  const assetCode = [asset.code, assetCurrency].filter(Boolean).join("/");
+  const redrawSignalTooltips = installDcaSignalTooltips(container, api.chart, dcaLine, dca.signals, assetCode);
   const redrawDecoration = () => {
     redrawBands();
     redrawGuideLabels();
+    redrawSignalTooltips();
   };
   const redrawAfterInteraction = () => requestAnimationFrame(() => requestAnimationFrame(redrawDecoration));
   container.addEventListener("pointermove", (event) => { if (event.buttons) redrawAfterInteraction(); }, { capture: true });

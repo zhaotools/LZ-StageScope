@@ -820,7 +820,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   border-radius: 14px;
   background: var(--surface);
 }
-.chart > :not(.stage-background-layer):not(.stage-label-layer):not(.stage-transition-layer):not(.band-history-marker-layer):not(.stoch-rsi-label):not(.dca-background-layer):not(.dca-guide-label-layer) { position: relative; z-index: 1; }
+.chart > :not(.stage-background-layer):not(.stage-label-layer):not(.stage-transition-layer):not(.band-history-marker-layer):not(.stoch-rsi-label):not(.dca-background-layer):not(.dca-guide-label-layer):not(.dca-signal-tooltip-layer) { position: relative; z-index: 1; }
 .stage-background-layer, .stage-label-layer, .stage-transition-layer, .band-history-marker-layer {
   position: absolute;
   inset: 0;
@@ -878,6 +878,51 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   white-space: nowrap;
   transform: translateY(-50%);
 }
+.dca-signal-tooltip-layer { position: absolute; inset: 0; z-index: 6; overflow: hidden; pointer-events: none; }
+.dca-signal-tooltip-target {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.dca-signal-tooltip-target:focus-visible { outline: 2px solid rgba(36, 120, 165, 0.42); outline-offset: 1px; border-radius: 50%; }
+.dca-signal-tooltip {
+  position: absolute;
+  left: 50%;
+  z-index: 7;
+  display: block;
+  width: max-content;
+  min-width: 178px;
+  max-width: 245px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: #f2f4f5;
+  background: rgba(48, 53, 58, 0.96);
+  box-shadow: 0 10px 24px rgba(7, 29, 50, 0.24);
+  font-size: 11px;
+  font-weight: 520;
+  line-height: 1.55;
+  text-align: left;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.14s ease, visibility 0.14s ease;
+}
+.dca-signal-tooltip-target.above .dca-signal-tooltip { bottom: calc(100% + 3px); }
+.dca-signal-tooltip-target.below .dca-signal-tooltip { top: calc(100% + 3px); }
+.dca-signal-tooltip span { display: block; }
+.dca-signal-tooltip.align-left { left: 0; transform: translateX(-2px); }
+.dca-signal-tooltip.align-right { right: 0; left: auto; transform: translateX(2px); }
+.dca-signal-tooltip-target:hover .dca-signal-tooltip,
+.dca-signal-tooltip-target:focus .dca-signal-tooltip,
+.dca-signal-tooltip-target:focus-within .dca-signal-tooltip { opacity: 1; visibility: visible; }
 .stage-transition-badge {
   --stage-color: #65778a;
   position: absolute;
