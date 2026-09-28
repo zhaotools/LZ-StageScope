@@ -1144,6 +1144,10 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .big-state.support { color: var(--green); }
 .big-state.pressure { color: var(--red); }
 .big-state.neutral { color: var(--gold-deep); }
+.big-state.stage-s1, .weekly-stage-value.stage-s1 { color: #4b82c3; }
+.big-state.stage-s2, .weekly-stage-value.stage-s2 { color: #16835d; }
+.big-state.stage-s3, .weekly-stage-value.stage-s3 { color: #c98632; }
+.big-state.stage-s4, .weekly-stage-value.stage-s4 { color: #c94f55; }
 .stat-list { display: grid; gap: 0; margin: 0; }
 .stat-list div { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .stat-list div:last-child { border-bottom: 0; }

@@ -1349,24 +1349,28 @@ function renderWeekly() {
   const confirmed = current.confirmed || {};
   const observation = current.observation || {};
   const confirmedLabel = confirmed.label || confirmed.code || "未确认";
-  const stageTone = signalClass(confirmedLabel);
   const currentPrimaryStage = Number(confirmed.primary || confirmed.stage);
+  const currentStageClass = stagePresentation[currentPrimaryStage] ? `stage-s${currentPrimaryStage}` : "";
   const currentStageTitle = stagePresentation[currentPrimaryStage]?.title || "";
   const observationPrimaryStage = Number(observation.primaryStage || observation.primary || observation.rawStage);
+  const observationStageClass = stagePresentation[observationPrimaryStage] ? `stage-s${observationPrimaryStage}` : "";
   const observationLabel = stagePresentation[observationPrimaryStage]?.code || "未确认";
   const slope = Number(current.slope);
   const ma30Direction = Number.isFinite(slope) ? (slope > 0 ? "上升" : slope < 0 ? "下降" : "持平") : "—";
-  const ma30Trend = Number.isFinite(slope)
-    ? `${ma30Direction} 5周${(Math.abs(slope) * 100).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}%`
+  const ma30Slope = Number.isFinite(slope)
+    ? `${(slope * 100).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}%`
     : "—";
   $("#weekly-stats").innerHTML = `
     <span class="panel-kicker">CURRENT STAGE</span>
-    <div class="big-state ${stageTone}"><span>${esc(confirmedLabel)}</span>${currentStageTitle ? `<small>${esc(currentStageTitle)}</small>` : ""}</div>
+    <div class="big-state ${currentStageClass}"><span>${esc(confirmedLabel)}</span>${currentStageTitle ? `<small>${esc(currentStageTitle)}</small>` : ""}</div>
     <dl class="stat-list">
-      <div><dt>当前阶段</dt><dd>${esc(confirmedLabel)}</dd></div>
+      <div><dt>当前阶段</dt><dd class="weekly-stage-value ${currentStageClass}">${esc(confirmedLabel)}</dd></div>
       <div><dt>主阶段持续</dt><dd>${Number.isFinite(Number(confirmed.weeks)) ? `${esc(confirmed.weeks)}周` : "—"}</dd></div>
-      <div><dt>本周观察</dt><dd>${esc(observationLabel)}</dd></div>
-      <div><dt>30周均线</dt><dd>${esc(ma30Trend)}</dd></div>
+      <div><dt>本周观察</dt><dd class="weekly-stage-value ${observationStageClass}">${esc(observationLabel)}</dd></div>
+      <div><dt>MA10</dt><dd>${fmt(current.ma10, 1)}</dd></div>
+      <div><dt>MA30</dt><dd>${fmt(current.ma30, 1)}</dd></div>
+      <div><dt>MA30趋势</dt><dd>${esc(ma30Direction)}</dd></div>
+      <div><dt>MA30周斜率</dt><dd>${esc(ma30Slope)}</dd></div>
     </dl>
     <div class="metric-track" aria-label="证据置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
     <p class="explanation">${esc(current.explanation || current.observation?.reason || "")}</p>
@@ -2784,7 +2788,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.3", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.4", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
