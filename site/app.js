@@ -2030,22 +2030,24 @@ function installStageTransitions(container, chart, candle, series, history) {
     layer.replaceChildren(...badges);
     layer.style.visibility = "visible";
   };
-  let layoutRedrawToken = 0;
+  let layoutDrawPending = false;
   const drawAfterLayoutSettles = () => {
-    const token = ++layoutRedrawToken;
+    if (layoutDrawPending) return;
+    layoutDrawPending = true;
     let attempts = 0;
     let completed = false;
     let previousSignature = "";
     let stableFrames = 0;
-    layer.style.visibility = "hidden";
+    if (!layer.children.length) layer.style.visibility = "hidden";
     const finish = (positions) => {
-      if (completed || token !== layoutRedrawToken || !layer.isConnected) return;
+      if (completed || !layer.isConnected) return;
       completed = true;
+      layoutDrawPending = false;
       window.clearTimeout(fallbackTimer);
       draw(positions);
     };
     const sample = () => {
-      if (completed || token !== layoutRedrawToken || !layer.isConnected) return;
+      if (completed || !layer.isConnected) return;
       const positions = measure();
       const signature = positions
         .map(({ item, x, y }) => `${item.date}:${x.toFixed(2)}:${y.toFixed(2)}`)
@@ -2832,7 +2834,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.13", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.14", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
