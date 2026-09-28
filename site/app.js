@@ -2030,45 +2030,22 @@ function installStageTransitions(container, chart, candle, series, history) {
     layer.replaceChildren(...badges);
     layer.style.visibility = "visible";
   };
-  let layoutDrawPending = false;
-  const drawAfterLayoutSettles = () => {
-    if (layoutDrawPending) return;
-    layoutDrawPending = true;
-    let attempts = 0;
-    let completed = false;
-    let previousSignature = "";
-    let stableFrames = 0;
-    if (!layer.children.length) layer.style.visibility = "hidden";
-    const finish = (positions) => {
-      if (completed || !layer.isConnected) return;
-      completed = true;
-      layoutDrawPending = false;
-      window.clearTimeout(fallbackTimer);
-      draw(positions);
-    };
-    const sample = () => {
-      if (completed || !layer.isConnected) return;
-      const positions = measure();
-      const signature = positions
-        .map(({ item, x, y }) => `${item.date}:${x.toFixed(2)}:${y.toFixed(2)}`)
-        .join("|");
-      stableFrames = signature && signature === previousSignature ? stableFrames + 1 : 0;
-      previousSignature = signature;
-      attempts += 1;
-      if (attempts >= 4 && stableFrames >= 2) {
-        finish(positions);
-      } else if (attempts < 60) {
-        requestAnimationFrame(sample);
-      } else {
-        finish(positions);
-      }
-    };
-    const fallbackTimer = window.setTimeout(() => finish(measure()), 900);
-    requestAnimationFrame(sample);
+  let markerDrawActive = false;
+  let markerDrawPending = false;
+  const requestDraw = () => {
+    if (!markerDrawActive || markerDrawPending) return;
+    markerDrawPending = true;
+    requestAnimationFrame(() => {
+      markerDrawPending = false;
+      if (!layer.isConnected) return;
+      draw(measure());
+    });
   };
-  chart.timeScale().subscribeVisibleLogicalRangeChange?.(drawAfterLayoutSettles);
-  drawAfterLayoutSettles();
-  return drawAfterLayoutSettles;
+  chart.timeScale().subscribeVisibleLogicalRangeChange?.(requestDraw);
+  return () => {
+    markerDrawActive = true;
+    requestDraw();
+  };
 }
 
 function bandMarkerPresentation(status) {
@@ -2170,6 +2147,8 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
   if (state.charts.has(id) || !series?.length) return;
   const container = document.getElementById(id);
   if (!container || container.clientWidth === 0) return;
+  const initialChartWidth = container.clientWidth;
+  const initialChartHeight = container.clientHeight;
   const api = chartApi(container, kind);
   if (!api) {
     container.innerHTML = '<p class="muted-copy">图表组件未能加载，状态数据仍可正常阅读。</p>';
@@ -2238,8 +2217,8 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
   }, { capture: true });
   container.addEventListener("wheel", redrawAfterChartInteraction, { capture: true, passive: true });
   container.addEventListener("dblclick", redrawAfterChartInteraction, { capture: true });
-  let chartWidth = container.clientWidth;
-  let chartHeight = container.clientHeight;
+  let chartWidth = initialChartWidth;
+  let chartHeight = initialChartHeight;
   const observer = new ResizeObserver(() => {
     const width = container.clientWidth;
     const height = container.clientHeight;
@@ -2255,12 +2234,21 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
     }));
   });
   observer.observe(container);
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    applyZoomBoundary();
-    applyRequestedVisibleRange();
-    recordVisibleRange();
-    redrawDecoration();
-  }));
+  requestAnimationFrame(() => {
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    if (width && height && (width !== chartWidth || height !== chartHeight)) {
+      chartWidth = width;
+      chartHeight = height;
+      api.chart.applyOptions({ width, height });
+    }
+    requestAnimationFrame(() => {
+      applyZoomBoundary();
+      applyRequestedVisibleRange();
+      recordVisibleRange();
+      requestAnimationFrame(redrawDecoration);
+    });
+  });
   state.charts.set(id, { ...api, candle, observer, redrawDecoration });
 }
 
@@ -2847,7 +2835,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.15", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.16", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
