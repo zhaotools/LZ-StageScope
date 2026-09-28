@@ -2238,8 +2238,15 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
   }, { capture: true });
   container.addEventListener("wheel", redrawAfterChartInteraction, { capture: true, passive: true });
   container.addEventListener("dblclick", redrawAfterChartInteraction, { capture: true });
+  let chartWidth = container.clientWidth;
+  let chartHeight = container.clientHeight;
   const observer = new ResizeObserver(() => {
-    api.chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    if (!width || !height || (width === chartWidth && height === chartHeight)) return;
+    chartWidth = width;
+    chartHeight = height;
+    api.chart.applyOptions({ width, height });
     requestAnimationFrame(() => requestAnimationFrame(() => {
       applyZoomBoundary();
       applyRequestedVisibleRange();
@@ -2248,6 +2255,12 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
     }));
   });
   observer.observe(container);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    applyZoomBoundary();
+    applyRequestedVisibleRange();
+    recordVisibleRange();
+    redrawDecoration();
+  }));
   state.charts.set(id, { ...api, candle, observer, redrawDecoration });
 }
 
@@ -2834,7 +2847,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.14", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.15", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
