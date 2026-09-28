@@ -1229,12 +1229,6 @@ function bandStatusTone(status) {
   return { className: "band-tone-neutral", color: "#7571b5" };
 }
 
-function returnText(value) {
-  if (!Number.isFinite(Number(value))) return "待观察";
-  const number = Number(value);
-  return `${number > 0 ? "+" : ""}${fmt(number, 2)}%`;
-}
-
 function returnTone(value) {
   if (!Number.isFinite(Number(value))) return "pending";
   return Number(value) > 0 ? "positive" : Number(value) < 0 ? "negative" : "";
@@ -1372,16 +1366,8 @@ function renderWeekly() {
       <div><dt>MA30趋势</dt><dd>${esc(ma30Direction)}</dd></div>
       <div><dt>MA30周斜率</dt><dd>${esc(ma30Slope)}</dd></div>
     </dl>
-    <div class="metric-track" aria-label="证据置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
     <p class="explanation">${esc(current.explanation || current.observation?.reason || "")}</p>
   `;
-  $("#weekly-evidence").innerHTML = (current.evidence || []).map((item) => `
-    <div class="evidence-item">
-      <strong>${esc(item.label)}</strong>
-      <span class="tag ${esc(item.state === "support" ? "support" : item.state === "warning" ? "warning" : "neutral")}">${esc(item.value)}</span>
-      <p>${esc(item.detail)}</p>
-    </div>
-  `).join("") || '<p class="muted-copy">当前没有可展示的阶段证据。</p>';
   $("#stage-history").innerHTML = [...(state.weekly.stageHistory || [])].slice(-6).reverse().map((item) => `
     <div class="history-item stage-bg-s${stageNumber(item.newStage) || 0}">
       <strong>${esc(item.originalStage)} → ${esc(item.newStage)}</strong>
@@ -1424,12 +1410,10 @@ function renderDaily() {
         <td><time datetime="${esc(item.date)}">${esc(fmtDate(item.date))}</time></td>
         <td><span class="band-status-chip ${tone.className}">${esc(item.status)}</span></td>
         <td class="number-cell">${fmt(item.price, 1)}</td>
-        <td class="number-cell ${returnTone(item.return7)}">${esc(returnText(item.return7))}</td>
-        <td class="number-cell ${returnTone(item.return14)}">${esc(returnText(item.return14))}</td>
         <td class="action-cell">${esc(item.action || "—")}</td>
       </tr>
     `;
-  }).join("") || '<tr><td colspan="6" class="empty-history">暂无历史状态变化。</td></tr>';
+  }).join("") || '<tr><td colspan="4" class="empty-history">暂无历史状态变化。</td></tr>';
 }
 
 function safeExternalUrl(value) {
@@ -1679,9 +1663,8 @@ function renderDca() {
       <td class="number-cell">${fmt(item.lzDca, 2)}</td>
       <td class="number-cell">${fmt(item.price, 2)}</td>
       <td><span class="dca-signal-chip ${item.type === "low" ? "low" : "high"}">${esc(item.label)}</span></td>
-      <td class="dca-signal-detail">${item.reasons?.length ? esc(item.reasons.join("；")) : "—"}</td>
     </tr>
-  `).join("") : `<tr><td class="empty-history" colspan="5">${historyLimited ? "有效历史不足，暂不生成历史信号。" : "近4年没有满足严格确认条件的重要信号。"}</td></tr>`;
+  `).join("") : `<tr><td class="empty-history" colspan="4">${historyLimited ? "有效历史不足，暂不生成历史信号。" : "近4年没有满足严格确认条件的重要信号。"}</td></tr>`;
 
   if (historyLimited) {
     $("#dca-chart").innerHTML = `<div class="dca-chart-unavailable"><strong>历史图表暂不可用</strong><span>LZ-DCA V1.1 需要至少 ${fmt(dca.historyMeta?.requiredForFullHistory, 0)} 根有效日线生成可比历史。</span></div>`;
@@ -2752,7 +2735,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.5", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.6", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

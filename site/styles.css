@@ -712,12 +712,15 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 
 .content-grid { display: grid; gap: 17px; }
 .detail-grid { grid-template-columns: minmax(0, 1.62fr) minmax(280px, 0.78fr); }
-.weekly-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(250px, 0.82fr); }
-.dca-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(270px, 0.9fr); align-items: stretch; }
+.weekly-detail-grid, .daily-chart-grid { grid-template-columns: 1fr; }
+.dca-detail-grid { grid-template-columns: 1fr; }
 .dca-chart-panel { display: flex; flex-direction: column; }
-.dca-chart-panel .dca-chart { flex: 1 1 auto; height: auto; min-height: 620px; }
+.dca-chart-panel .dca-chart { flex: none; height: 560px; min-height: 560px; }
 .dca-side-stack { display: grid; min-width: 0; grid-template-rows: auto 1fr; gap: 17px; }
 .lower-grid { grid-template-columns: 1fr 1fr; margin-top: 17px; }
+.weekly-lower-grid { grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr); }
+.daily-lower-grid { grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.62fr); align-items: start; }
+.dca-lower-grid { grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.62fr); align-items: start; }
 .panel {
   min-width: 0;
   padding: 24px;
@@ -1111,7 +1114,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .dca-statistics-panel { display: flex; flex-direction: column; }
 .dca-side-stack .dca-tier-statistics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .dca-side-stack .dca-tier-card strong { font-size: 18px; }
-.dca-signals-panel { margin-top: 17px; }
+.dca-signals-panel { margin-top: 0; }
 .dca-tier-statistics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
 .dca-tier-card { min-width: 0; padding: 13px; border: 1px solid transparent; border-radius: 10px; }
 .dca-tier-card span { display: block; font-size: 10px; font-weight: 760; }
@@ -1122,19 +1125,17 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .dca-tier-card.zone-watch { color: #c98632; background: #fbf2e7; }
 .dca-tier-card.zone-hot { color: #c94f55; background: #fbecef; }
 .dca-empty-copy { grid-column: 1 / -1; margin: 0; padding: 28px 12px; color: var(--muted); text-align: center; font-size: 11px; }
-.dca-signal-table { width: 100%; min-width: 600px; border-collapse: collapse; table-layout: fixed; }
+.dca-signal-table { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; }
 .dca-signal-table th, .dca-signal-table td { padding: 11px 12px; border-bottom: 1px solid #edf1f3; color: var(--ink); font-size: 10px; line-height: 1.45; text-align: left; vertical-align: top; }
 .dca-signal-table th { color: var(--muted); background: #f7f9fa; font-size: 9px; font-weight: 750; }
 .dca-signal-table tr:last-child td { border-bottom: 0; }
-.dca-signal-table th:nth-child(1) { width: 14%; }
-.dca-signal-table th:nth-child(2) { width: 12%; }
-.dca-signal-table th:nth-child(3) { width: 16%; }
-.dca-signal-table th:nth-child(4) { width: 16%; }
-.dca-signal-table th:nth-child(5) { width: 42%; }
+.dca-signal-table th:nth-child(1) { width: 20%; }
+.dca-signal-table th:nth-child(2) { width: 18%; }
+.dca-signal-table th:nth-child(3) { width: 24%; }
+.dca-signal-table th:nth-child(4) { width: 38%; }
 .dca-signal-chip { display: inline-flex; padding: 3px 6px; border-radius: 6px; font-size: 9px; font-weight: 760; white-space: nowrap; }
 .dca-signal-chip.low { color: #16835d; background: #e8f5ef; }
 .dca-signal-chip.high { color: var(--red); background: var(--red-soft); }
-.dca-signal-detail { color: var(--muted) !important; white-space: normal; }
 .big-state { display: flex; align-items: baseline; flex-wrap: wrap; gap: 9px; margin: 12px 0 18px; color: var(--navy); font-size: 38px; font-weight: 750; letter-spacing: -0.025em; }
 .big-state small { font-family: inherit; font-size: 17px; font-weight: 650; letter-spacing: 0.01em; }
 .big-state.support { color: var(--green); }
@@ -1179,8 +1180,8 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 }
 .daily-change-summary span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
 .daily-change-summary strong { color: var(--ink); font-size: 14px; line-height: 1.55; }
-.evidence-list, .history-list { display: grid; gap: 10px; }
-.evidence-item, .history-item {
+.history-list { display: grid; gap: 10px; }
+.history-item {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px 18px;
@@ -1189,13 +1190,13 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   border-radius: 13px;
   background: var(--surface-muted);
 }
-.evidence-item strong, .history-item strong { color: var(--ink); font-size: 13px; }
-.evidence-item p, .history-item p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.history-item strong { color: var(--ink); font-size: 13px; }
+.history-item p { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .history-item.stage-bg-s1 { border-color: #dce8f3; background: #f5f8fc; }
 .history-item.stage-bg-s2 { border-color: #d5e9df; background: #f3f9f6; }
 .history-item.stage-bg-s3 { border-color: #eedfcb; background: #fcf8f2; }
 .history-item.stage-bg-s4 { border-color: #efd7da; background: #fcf5f6; }
-.band-history-panel { margin-top: 17px; padding-bottom: 14px; }
+.band-history-panel { margin-top: 0; padding-bottom: 14px; }
 .history-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
 .history-heading > div { min-width: 0; }
 .history-count {
@@ -1208,7 +1209,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   font-weight: 750;
 }
 .history-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
-.band-history-table { width: 100%; min-width: 760px; border-collapse: collapse; table-layout: fixed; }
+.band-history-table { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; }
 .band-history-table th, .band-history-table td {
   padding: 11px 12px;
   border-bottom: 1px solid #edf1f3;
@@ -1230,11 +1231,10 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 }
 .band-history-table tr:last-child td { border-bottom: 0; }
 .band-history-table tbody tr:hover { background: #fbfcfc; }
-.band-history-table th:nth-child(1) { width: 14%; }
-.band-history-table th:nth-child(2) { width: 17%; }
-.band-history-table th:nth-child(3) { width: 13%; }
-.band-history-table th:nth-child(4), .band-history-table th:nth-child(5) { width: 13%; }
-.band-history-table th:nth-child(6) { width: 30%; }
+.band-history-table th:nth-child(1) { width: 18%; }
+.band-history-table th:nth-child(2) { width: 24%; }
+.band-history-table th:nth-child(3) { width: 17%; }
+.band-history-table th:nth-child(4) { width: 41%; }
 .band-history-table th:not(:last-child), .band-history-table td:not(:last-child) { white-space: nowrap; }
 .band-status-chip {
   display: inline-flex;
@@ -1437,8 +1437,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .overview-top-row { grid-template-columns: 1fr; }
   .validation-strip { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
-  .weekly-detail-grid { grid-template-columns: 1fr; }
-  .dca-detail-grid { grid-template-columns: 1fr; }
+  .weekly-detail-grid, .daily-chart-grid, .daily-lower-grid, .dca-detail-grid, .dca-lower-grid { grid-template-columns: 1fr; }
   .dca-chart-panel .dca-chart { flex: none; height: 520px; min-height: 520px; }
   .daily-side-stack { gap: 12px; }
   .stat-panel { min-height: 330px; }
@@ -1575,11 +1574,9 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .dca-signal-table th, .dca-signal-table td { padding: 9px 4px; overflow: hidden; font-size: 8.5px; text-overflow: clip; white-space: nowrap; }
   .dca-signal-table th { font-size: 8px; }
   .dca-signal-table th:nth-child(1) { width: 26%; }
-  .dca-signal-table th:nth-child(2) { width: 17%; }
-  .dca-signal-table th:nth-child(3) { width: 25%; }
-  .dca-signal-table th:nth-child(4) { width: 32%; }
-  .dca-signal-table th:nth-child(5),
-  .dca-signal-table td:nth-child(5) { display: none; }
+  .dca-signal-table th:nth-child(2) { width: 20%; }
+  .dca-signal-table th:nth-child(3) { width: 27%; }
+  .dca-signal-table th:nth-child(4) { width: 27%; }
   .dca-signal-chip { max-width: 100%; padding: 2px 3px; font-size: 8px; }
   .band-history-panel { padding: 18px 14px 12px; }
   .section-heading { align-items: flex-end; }
