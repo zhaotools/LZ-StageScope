@@ -1,6 +1,6 @@
 {
   "schemaVersion": "gold-fundamentals-v1",
-  "generatedAt": "2026-09-28T17:10:54+00:00",
+  "generatedAt": "2026-09-28T17:35:48+00:00",
   "asset": "gold",
   "scope": "macro-minimum",
   "factors": [
@@ -146,7 +146,7 @@
   "recentNews": {
     "schemaVersion": "asset-news-v1",
     "asset": "gold",
-    "generatedAt": "2026-09-28T17:10:56+00:00",
+    "generatedAt": "2026-09-28T17:35:50+00:00",
     "asOf": "2026-09-28",
     "status": "ok",
     "maxItems": 5,
@@ -213,9 +213,9 @@
       },
       {
         "id": "202609283885429844",
-        "title": "美股三大指数集体下跌 国际金价大跌",
+        "title": "美股三大指数集体下跌 国际金价大跌、油价跳水",
         "publisher": "东方财富Choice数据",
-        "publishedAt": "2026-09-28T16:52:42Z",
+        "publishedAt": "2026-09-28T17:25:33Z",
         "url": "https://finance.eastmoney.com/a/202609283885429844.html",
         "eventType": "资产动态",
         "selectionReason": "中文报道涉及资产动态，且标题与该资产直接相关。",
