@@ -1987,15 +1987,17 @@ function installStageTransitions(container, chart, candle, series, history) {
     const next = stageNumber(item.newStage);
     return original && next && original !== next && bars.has(item.date);
   });
-  const redraw = () => {
-    layer.replaceChildren();
-    transitions.forEach((item) => {
-      const stage = stageNumber(item.newStage);
-      const bar = bars.get(item.date);
-      const isBelow = stage === 1 || stage === 2;
-      const x = chart.timeScale().timeToCoordinate(item.date);
-      const y = candle.priceToCoordinate(isBelow ? bar.low : bar.high);
-      if (!Number.isFinite(x) || !Number.isFinite(y) || x < -40 || x > container.clientWidth + 40) return;
+  const measure = () => transitions.flatMap((item) => {
+    const stage = stageNumber(item.newStage);
+    const bar = bars.get(item.date);
+    const isBelow = stage === 1 || stage === 2;
+    const x = chart.timeScale().timeToCoordinate(item.date);
+    const y = candle.priceToCoordinate(isBelow ? bar.low : bar.high);
+    if (!Number.isFinite(x) || !Number.isFinite(y) || x < -40 || x > container.clientWidth + 40) return [];
+    return [{ item, stage, bar, isBelow, x, y }];
+  });
+  const draw = (positions) => {
+    const badges = positions.map(({ item, stage, bar, isBelow, x, y }) => {
       const badge = document.createElement("span");
       badge.className = `stage-transition-badge s${stage} ${isBelow ? "below" : "above"}`;
       badge.style.left = `${x}px`;
@@ -2023,24 +2025,48 @@ function installStageTransitions(container, chart, candle, series, history) {
       });
       badge.setAttribute("aria-label", tooltipRows.map(([key, value]) => `${key}：${value}`).join("；"));
       badge.append(label, tooltip);
-      layer.append(badge);
+      return badge;
     });
+    layer.replaceChildren(...badges);
+    layer.style.visibility = "visible";
   };
   let layoutRedrawToken = 0;
-  const redrawAfterLayoutSettles = () => {
+  const drawAfterLayoutSettles = () => {
     const token = ++layoutRedrawToken;
-    let frame = 0;
-    const redrawFrame = () => {
-      if (token !== layoutRedrawToken) return;
-      redraw();
-      frame += 1;
-      if (frame < 24) requestAnimationFrame(redrawFrame);
+    let attempts = 0;
+    let completed = false;
+    let previousSignature = "";
+    let stableFrames = 0;
+    layer.style.visibility = "hidden";
+    const finish = (positions) => {
+      if (completed || token !== layoutRedrawToken || !layer.isConnected) return;
+      completed = true;
+      window.clearTimeout(fallbackTimer);
+      draw(positions);
     };
-    requestAnimationFrame(redrawFrame);
+    const sample = () => {
+      if (completed || token !== layoutRedrawToken || !layer.isConnected) return;
+      const positions = measure();
+      const signature = positions
+        .map(({ item, x, y }) => `${item.date}:${x.toFixed(2)}:${y.toFixed(2)}`)
+        .join("|");
+      stableFrames = signature && signature === previousSignature ? stableFrames + 1 : 0;
+      previousSignature = signature;
+      attempts += 1;
+      if (attempts >= 4 && stableFrames >= 2) {
+        finish(positions);
+      } else if (attempts < 60) {
+        requestAnimationFrame(sample);
+      } else {
+        finish(positions);
+      }
+    };
+    const fallbackTimer = window.setTimeout(() => finish(measure()), 900);
+    requestAnimationFrame(sample);
   };
-  chart.timeScale().subscribeVisibleLogicalRangeChange?.(redrawAfterLayoutSettles);
-  redrawAfterLayoutSettles();
-  return redrawAfterLayoutSettles;
+  chart.timeScale().subscribeVisibleLogicalRangeChange?.(drawAfterLayoutSettles);
+  drawAfterLayoutSettles();
+  return drawAfterLayoutSettles;
 }
 
 function bandMarkerPresentation(status) {
@@ -2806,7 +2832,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.11", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.13", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
