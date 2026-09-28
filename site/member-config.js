@@ -7,6 +7,6 @@ export const MEMBER_CONFIG = Object.freeze({
   deviceSessionClaimRpc: "claim_member_device_session",
   deviceSessionValidateRpc: "validate_member_device_session",
   deviceSessionReleaseRpc: "release_member_device_session",
-  turnstileSiteKey: "",
+  turnstileSiteKey: "0x4AAAAAAEkJSSJBMDInU2Cg",
   storageKey: "lz-assetscope-auth-v1",
 });

@@ -372,7 +372,6 @@ body.member-dialog-open { overflow: hidden; }
 .member-login-submit:disabled,
 .account-save-button:disabled { color: rgba(255, 255, 255, 0.6); background: #8b9ba7; cursor: wait; }
 .member-login-error { padding: 9px 11px; border: 1px solid #ecc4c4; border-radius: 9px; color: var(--red); background: var(--red-soft); font-size: 10px; line-height: 1.55; }
-.member-login-note { display: block; margin-top: 13px; color: var(--muted-light); font-size: 9px; line-height: 1.6; }
 .member-account-summary { display: grid; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
 .member-account-summary strong { color: var(--ink-strong); font-size: 14px; }
 .member-account-summary span { color: var(--muted); font-size: 10px; }

@@ -17,7 +17,7 @@ import {
   updateMemberDisplayName,
   updateMemberPassword,
   validateMemberDeviceSession,
-} from "./member-auth.js?v=1.1.3";
+} from "./member-auth.js?v=1.1.4";
 
 const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
@@ -910,6 +910,9 @@ async function renderAccountTurnstileWidget() {
       accountTurnstileWidgetId = window.turnstile.render("#account-password-turnstile", {
         sitekey: MEMBER_CONFIG.turnstileSiteKey,
         action: "member-password-update",
+        theme: "light",
+        language: "zh-CN",
+        size: "flexible",
         callback: (token) => { accountCaptchaToken = token; syncAccountPasswordSubmit(); },
         "expired-callback": () => { accountCaptchaToken = ""; syncAccountPasswordSubmit(); },
         "error-callback": () => { accountCaptchaToken = ""; syncAccountPasswordSubmit(); },
@@ -936,6 +939,9 @@ async function renderTurnstileWidget() {
       turnstileWidgetId = window.turnstile.render("#member-turnstile", {
         sitekey: MEMBER_CONFIG.turnstileSiteKey,
         action: "member-login",
+        theme: "light",
+        language: "zh-CN",
+        size: "flexible",
         callback: (token) => { memberCaptchaToken = token; syncMemberSubmit(); },
         "expired-callback": () => { memberCaptchaToken = ""; syncMemberSubmit(); },
         "error-callback": () => { memberCaptchaToken = ""; syncMemberSubmit(); },
@@ -2772,7 +2778,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.1", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.2", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

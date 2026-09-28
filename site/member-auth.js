@@ -1,4 +1,4 @@
-import { MEMBER_CONFIG } from "./member-config.js?v=1.0.18";
+import { MEMBER_CONFIG } from "./member-config.js?v=1.0.19";
 
 export { MEMBER_CONFIG };
 
