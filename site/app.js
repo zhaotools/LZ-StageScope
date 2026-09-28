@@ -1360,6 +1360,7 @@ function renderWeekly() {
   const ma30Slope = Number.isFinite(slope)
     ? `${(slope * 100).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}%`
     : "—";
+  const ma30TrendClass = slope > 0 ? "up" : slope < 0 ? "down" : "flat";
   $("#weekly-stats").innerHTML = `
     <span class="panel-kicker">CURRENT STAGE</span>
     <div class="big-state ${currentStageClass}"><span>${esc(confirmedLabel)}</span>${currentStageTitle ? `<small>${esc(currentStageTitle)}</small>` : ""}</div>
@@ -1369,8 +1370,7 @@ function renderWeekly() {
       <div><dt>本周观察</dt><dd class="weekly-stage-value ${observationStageClass}">${esc(observationLabel)}</dd></div>
       <div><dt>MA10</dt><dd>${fmt(current.ma10, 1)}</dd></div>
       <div><dt>MA30</dt><dd>${fmt(current.ma30, 1)}</dd></div>
-      <div><dt>MA30趋势</dt><dd>${esc(ma30Direction)}</dd></div>
-      <div><dt>MA30周斜率</dt><dd>${esc(ma30Slope)}</dd></div>
+      <div><dt>MA30趋势</dt><dd class="weekly-ma30-trend ${ma30TrendClass}">${esc(ma30Direction)}<span>｜5周斜率 ${esc(ma30Slope)}</span></dd></div>
     </dl>
     <div class="metric-track" aria-label="证据置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
     <p class="explanation">${esc(current.explanation || current.observation?.reason || "")}</p>
@@ -2143,7 +2143,14 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
   api.chart.timeScale().fitContent();
   if (options.visibleMonths) {
     const latestDate = series.at(-1)?.date || series.at(-1)?.time;
-    if (latestDate) api.chart.timeScale().setVisibleRange({ from: shiftIsoMonths(latestDate, -options.visibleMonths), to: latestDate });
+    if (latestDate && options.spreadVisibleRange) {
+      const firstVisibleDate = shiftIsoMonths(latestDate, -options.visibleMonths);
+      const firstVisibleIndex = series.findIndex((bar) => String(bar.date || bar.time) >= firstVisibleDate);
+      const from = Math.max(0, firstVisibleIndex < 0 ? 0 : firstVisibleIndex) - 0.5;
+      api.chart.timeScale().setVisibleLogicalRange({ from, to: series.length - 0.5 });
+    } else if (latestDate) {
+      api.chart.timeScale().setVisibleRange({ from: shiftIsoMonths(latestDate, -options.visibleMonths), to: latestDate });
+    }
   }
   const applyZoomBoundary = options.limitZoomToData
     ? installDataZoomBoundary(container, api.chart, series.length)
@@ -2186,7 +2193,7 @@ function renderWeeklyChart() {
     completedSeries,
     [["ma30", "#2478a5", "MA30"]],
     "weekly",
-    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, visibleMonths: 48, limitZoomToData: true },
+    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, visibleMonths: 48, spreadVisibleRange: true, limitZoomToData: true },
   );
 }
 
@@ -2317,12 +2324,12 @@ function renderDcaChart() {
   api.chart.priceScale("left").applyOptions({
     visible: true,
     borderColor: "rgba(16,40,59,.12)",
-    scaleMargins: { top: 0.08, bottom: 0.08 },
+    scaleMargins: { top: 0.03, bottom: 0.03 },
   });
   api.chart.priceScale("right").applyOptions({
     visible: true,
     borderColor: "rgba(16,40,59,.12)",
-    scaleMargins: { top: 0.08, bottom: 0.08 },
+    scaleMargins: { top: 0.03, bottom: 0.03 },
   });
   api.chart.timeScale().fitContent();
   applyDcaTimeRange(api.chart, series);
@@ -2752,7 +2759,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.7", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.8", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
