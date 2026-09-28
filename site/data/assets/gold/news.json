@@ -1,7 +1,7 @@
 {
   "schemaVersion": "asset-news-v1",
   "asset": "gold",
-  "generatedAt": "2026-09-28T13:51:42+00:00",
+  "generatedAt": "2026-09-28T15:28:24+00:00",
   "asOf": "2026-09-28",
   "status": "ok",
   "maxItems": 5,
@@ -67,11 +67,11 @@
       "language": "zh-CN"
     },
     {
-      "id": "202609283885429844",
-      "title": "美股三大指数集体下跌 国际金价大跌、油价走高",
-      "publisher": "东方财富Choice数据",
-      "publishedAt": "2026-09-28T13:42:24Z",
-      "url": "https://finance.eastmoney.com/a/202609283885429844.html",
+      "id": "202609283885554130",
+      "title": "现货黄金日内跌4%",
+      "publisher": "证券时报网",
+      "publishedAt": "2026-09-28T15:06:00Z",
+      "url": "https://finance.eastmoney.com/a/202609283885554130.html",
       "eventType": "资产动态",
       "selectionReason": "中文报道涉及资产动态，且标题与该资产直接相关。",
       "relatedTickers": [

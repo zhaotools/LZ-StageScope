@@ -522,7 +522,7 @@
     },
     {
       "date": "2026-09-25",
-      "generatedAt": "2026-09-28T13:51:49+00:00",
+      "generatedAt": "2026-09-28T15:28:30+00:00",
       "inputHash": "158a7c9db0fa446cb7dfa1853b296f5fca5faae9c1fff5b26b61daca60fa06d7",
       "asset": {
         "symbol": "GC=F",
@@ -653,7 +653,7 @@
         "summary": {
           "ok": true,
           "snapshotId": "158a7c9db0fa446c",
-          "snapshotCreatedAt": "2026-09-28T13:51:35+00:00",
+          "snapshotCreatedAt": "2026-09-28T15:28:16+00:00",
           "symbol": "GC=F",
           "name": "COMEX 黄金连续合约",
           "market": "commodity",
@@ -670,7 +670,7 @@
           "volume": 164814.0,
           "date": "2026-09-25",
           "quoteDate": "2026-09-25",
-          "updatedAt": "2026-09-28T13:51:35+00:00",
+          "updatedAt": "2026-09-28T15:28:16+00:00",
           "bullBear": {
             "status": "熊市区",
             "score": 5,
