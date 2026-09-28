@@ -2150,8 +2150,12 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
     if (!showLabel) line.applyOptions({ title: "", priceLineVisible: false, lastValueVisible: false });
   });
   if (options.stochRsi) installStochRsi(container, api.chart, api.addLine, series);
-  api.chart.timeScale().fitContent();
-  if (options.visibleMonths) {
+  const applyRequestedVisibleRange = () => {
+    if (options.fitAllSeries) {
+      api.chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: series.length - 0.5 });
+      return;
+    }
+    if (!options.visibleMonths) return;
     const latestDate = series.at(-1)?.date || series.at(-1)?.time;
     if (latestDate && options.spreadVisibleRange) {
       const firstVisibleDate = shiftIsoMonths(latestDate, -options.visibleMonths);
@@ -2161,7 +2165,19 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
     } else if (latestDate) {
       api.chart.timeScale().setVisibleRange({ from: shiftIsoMonths(latestDate, -options.visibleMonths), to: latestDate });
     }
-  }
+  };
+  const recordVisibleRange = (range = api.chart.timeScale().getVisibleLogicalRange?.()) => {
+    if (!range || !Number.isFinite(range.from) || !Number.isFinite(range.to)) return;
+    const fromIndex = Math.max(0, Math.min(series.length - 1, Math.ceil(range.from)));
+    const toIndex = Math.max(0, Math.min(series.length - 1, Math.floor(range.to)));
+    container.dataset.renderedVisibleFrom = series[fromIndex]?.date || series[fromIndex]?.time || "";
+    container.dataset.renderedVisibleTo = series[toIndex]?.date || series[toIndex]?.time || "";
+    container.dataset.renderedVisibleBars = String(Math.max(0, toIndex - fromIndex + 1));
+  };
+  api.chart.timeScale().subscribeVisibleLogicalRangeChange?.(recordVisibleRange);
+  api.chart.timeScale().fitContent();
+  applyRequestedVisibleRange();
+  recordVisibleRange();
   const applyZoomBoundary = options.limitZoomToData
     ? installDataZoomBoundary(container, api.chart, series.length)
     : () => {};
@@ -2184,10 +2200,12 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
   container.addEventListener("dblclick", redrawAfterChartInteraction, { capture: true });
   const observer = new ResizeObserver(() => {
     api.chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-    requestAnimationFrame(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       applyZoomBoundary();
+      applyRequestedVisibleRange();
+      recordVisibleRange();
       redrawDecoration();
-    });
+    }));
   });
   observer.observe(container);
   state.charts.set(id, { ...api, candle, observer, redrawDecoration });
@@ -2210,7 +2228,7 @@ function renderWeeklyChart() {
     completedSeries,
     [["ma30", "#2478a5", "MA30"]],
     "weekly",
-    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, limitZoomToData: true },
+    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, fitAllSeries: true, limitZoomToData: true },
   );
 }
 
@@ -2776,7 +2794,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.9", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.10", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

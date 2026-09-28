@@ -1174,6 +1174,11 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   background: var(--blue);
 }
 .explanation { margin: auto 0 0; padding-top: 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+#weekly-stats { padding-block: 20px; }
+#weekly-stats .big-state { margin-block: 9px 12px; }
+#weekly-stats .stat-list div { padding-block: 9px; }
+#weekly-stats .metric-track { margin-top: 9px; }
+#weekly-stats .explanation { margin: 0; padding-top: 12px; }
 .daily-side-stack {
   display: flex;
   min-width: 0;
@@ -1452,6 +1457,11 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .daily-side-stack { gap: 12px; }
   .stat-panel { min-height: 330px; }
   .daily-side-stack .stat-panel { min-height: 0; }
+}
+
+@media (min-width: 901px) {
+  .weekly-detail-grid .chart-panel { display: flex; flex-direction: column; }
+  .weekly-detail-grid .chart { flex: 1 1 auto; height: auto; min-height: 360px; }
 }
 
 @media (max-width: 760px) {
