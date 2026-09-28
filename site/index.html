@@ -22,7 +22,7 @@
       #app-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:28px;color:#fff;background:#082d43;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;opacity:1;visibility:visible;transition:opacity .36s ease,visibility .36s ease;animation:app-splash-failsafe .3s ease 12s forwards}#app-splash.is-ready{pointer-events:none;opacity:0;visibility:hidden;animation:none}.app-splash-inner{display:grid;width:min(290px,82vw);justify-items:center;text-align:center;transform:translateY(-7svh)}.app-splash-mark{display:grid;width:92px;height:92px;margin-bottom:22px;place-items:center;border:1px solid rgba(126,192,226,.28);border-radius:24px;background:#0b344b;box-shadow:0 20px 55px rgba(0,9,20,.28)}.app-splash-mark img{display:block;width:76px;height:76px;border-radius:18px}.app-splash-title{margin:0;color:#fff;font-size:24px;font-weight:760;letter-spacing:.01em}.app-splash-brand{margin:7px 0 0;color:rgba(255,255,255,.58);font-size:11px;font-weight:760;letter-spacing:.2em}.app-splash-rule{width:42px;height:2px;margin:22px 0 17px;border-radius:2px;background:#a87320}.app-splash-loading{display:grid;gap:16px;justify-items:center;transform:translateY(15svh)}.app-splash-status{margin:0;color:rgba(255,255,255,.7);font-size:11px;letter-spacing:.08em}.app-splash-progress{width:116px;height:2px;overflow:hidden;border-radius:2px;background:rgba(255,255,255,.12)}.app-splash-progress span{display:block;width:48%;height:100%;border-radius:inherit;background:#5eb4dc;animation:app-splash-progress 1.35s ease-in-out infinite}.app-splash-note{position:absolute;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));left:20px;margin:0;color:rgba(255,255,255,.34);font-size:9px;letter-spacing:.12em;text-align:center}@keyframes app-splash-progress{0%{transform:translateX(-110%)}100%{transform:translateX(220%)}}@keyframes app-splash-failsafe{to{pointer-events:none;opacity:0;visibility:hidden}}@media(prefers-reduced-motion:reduce){#app-splash{transition:none}.app-splash-progress span{animation:none;width:100%;opacity:.7}}
       @media (min-width:761px) and (display-mode:browser) and (pointer:fine){#app-splash{display:none}}
     </style>
-    <link rel="stylesheet" href="./styles.css?v=1.3.11">
+    <link rel="stylesheet" href="./styles.css?v=1.3.12">
   </head>
   <body class="app-booting" aria-busy="true">
     <div id="app-splash" role="status" aria-live="polite" aria-label="正在加载我的趋势观察">
@@ -312,7 +312,7 @@
       </main>
 
       <footer class="site-footer shell">
-      <span id="footer-label">LZ-StageScope · 黄金观察</span>
+      <span id="footer-label">LZ-StageScope · 我的趋势观察</span>
       <a href="./gold/methodology" data-route="methodology">基于完成周期 · 查看框架与数据</a>
       </footer>
 
@@ -330,7 +330,7 @@
       <button class="asset-picker-backdrop" type="button" data-close-asset-picker aria-label="关闭资产选择"></button>
       <section class="asset-picker-panel" role="dialog" aria-modal="true" aria-labelledby="asset-picker-title">
         <div class="asset-picker-header"><div><span>ASSET LIBRARY</span><h2 id="asset-picker-title">添加资产</h2></div><button type="button" data-close-asset-picker aria-label="关闭">×</button></div>
-        <p>先选择资产分类，再查询数据源。个人自选最多 30 个，黄金计入数量。</p>
+        <p>先选择资产分类，再查询数据源。个人自选最多 30 个。</p>
         <div class="asset-limit-line"><span>我的自选</span><strong id="asset-count">— / 30</strong></div>
         <form class="asset-search-form" id="asset-search-form">
           <label for="asset-category">资产分类 <em>必选</em></label>
@@ -406,6 +406,6 @@
     </div>
 
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script type="module" src="./app.js?v=1.3.18"></script>
+    <script type="module" src="./app.js?v=1.3.19"></script>
   </body>
 </html>

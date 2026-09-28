@@ -21,7 +21,6 @@ import {
 
 const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
-const PUBLIC_SUMMARY_CACHE_KEY = "lz-stagescope:public-summary:gold";
 const routes = new Set(["overview", "weekly", "daily", "dca", "fundamentals", "methodology"]);
 const mobileLayout = window.matchMedia("(max-width: 760px)");
 let forceInitialMobileWatchlist = mobileLayout.matches;
@@ -32,7 +31,7 @@ const assets = {
     name: "黄金",
     shortName: "黄金",
     eyebrow: "GOLD · DAILY OBSERVATORY",
-    memberOnly: false,
+    memberOnly: true,
   },
   btc: {
     id: "btc",
@@ -43,7 +42,6 @@ const assets = {
     memberOnly: true,
   },
 };
-const PUBLIC_WATCHLIST = ["gold"];
 const state = {
   assetId: "gold",
   current: null,
@@ -72,7 +70,6 @@ const state = {
   pendingRoute: "overview",
   pendingDcaNotice: false,
   dcaRangeYears: 1,
-  publicGoldRefresh: null,
 };
 let chartLibraryPromise;
 let memberCaptchaToken = "";
@@ -172,52 +169,12 @@ function updateAssetPresentationFromSnapshot(assetId, snapshot) {
   presentation.currency = item.currency || presentation.currency;
 }
 
-function dataRoot(assetId = state.assetId) {
-  return new URL(`data/assets/${assetId}/`, SITE_ROOT);
-}
-
-function loadAssetResource(assetId, resource, options) {
+function loadAssetResource(assetId, resource) {
   if (resource === "dca-series.json") {
     if (!canUseDca()) throw new Error("当前账号未开通定投指标。");
     return loadMemberAssetResource(assetId, resource);
   }
-  if (assets[assetId]?.memberOnly) return loadMemberAssetResource(assetId, resource);
-  return loadJson(new URL(resource, dataRoot(assetId)), options);
-}
-
-function cachePublicGoldSummary(snapshot) {
-  if (!Number.isFinite(Number(snapshot?.quote?.price))) return;
-  try {
-    window.localStorage.setItem(PUBLIC_SUMMARY_CACHE_KEY, JSON.stringify({
-      savedAt: new Date().toISOString(),
-      payload: snapshot,
-    }));
-  } catch (error) {
-    console.warn("Unable to cache the public GOLD summary", error);
-  }
-}
-
-function restoreCachedPublicGoldSummary() {
-  try {
-    const cached = JSON.parse(window.localStorage.getItem(PUBLIC_SUMMARY_CACHE_KEY) || "null");
-    if (!Number.isFinite(Number(cached?.payload?.quote?.price))) return null;
-    const snapshot = { ...cached.payload, _watchlistCached: true, _watchlistCachedAt: cached.savedAt || "" };
-    state.assetSummaries.set("gold", snapshot);
-    updateAssetPresentationFromSnapshot("gold", snapshot);
-    return snapshot;
-  } catch (error) {
-    console.warn("Unable to restore the public GOLD summary", error);
-    return null;
-  }
-}
-
-async function refreshPublicGoldSummary() {
-  const snapshot = await loadAssetResource("gold", "current.json", { attempts: 3, timeoutMs: 7000 });
-  state.assetSummaries.set("gold", snapshot);
-  updateAssetPresentationFromSnapshot("gold", snapshot);
-  cachePublicGoldSummary(snapshot);
-  renderWatchlist();
-  return snapshot;
+  return loadMemberAssetResource(assetId, resource);
 }
 
 function routePath(route, assetId = state.assetId) {
@@ -237,9 +194,12 @@ function canUseDca() {
 }
 
 function canAccessAsset(assetId) {
-  if (assetId === "gold") return true;
   const row = memberAssetRow(assetId);
   return Boolean(isMember() && assets[assetId] && row?.status === "ready");
+}
+
+function firstAccessibleAssetId() {
+  return readWatchlist().find((assetId) => canAccessAsset(assetId)) || null;
 }
 
 function locationContext() {
@@ -263,6 +223,18 @@ function routeFromLocation() {
 function normalizeRoute() {
   const context = locationContext();
   let { assetId, route, view } = context;
+  const firstAssetId = firstAccessibleAssetId();
+  if (!firstAssetId) {
+    state.watchlistView = mobileLayout.matches;
+    const target = watchlistPath();
+    if (location.pathname !== target || location.search || location.hash) {
+      history.replaceState({ view: "watchlist" }, "", target);
+    }
+    forceInitialMobileWatchlist = false;
+    syncPageMode();
+    updateRouteLinks();
+    return null;
+  }
   if (view === "watchlist" && mobileLayout.matches) {
     state.watchlistView = true;
     const target = watchlistPath();
@@ -275,17 +247,13 @@ function normalizeRoute() {
     return "overview";
   }
   if (view === "watchlist") {
-    assetId = state.assetId || "gold";
+    assetId = canAccessAsset(state.assetId) ? state.assetId : firstAssetId;
     route = "overview";
     view = "asset";
   }
   if (!canAccessAsset(assetId)) {
-    if (route !== "methodology") {
-      state.pendingAssetId = assetId;
-      state.pendingRoute = route;
-      route = "overview";
-    }
-    assetId = "gold";
+    assetId = firstAssetId;
+    route = route === "methodology" ? route : "overview";
   }
   if (route === "dca" && !canUseDca()) {
     if (isMember()) {
@@ -338,9 +306,9 @@ function memberAssetRow(assetId) {
 }
 
 function readWatchlist() {
-  if (!isMember()) return [...PUBLIC_WATCHLIST];
+  if (!isMember()) return [];
   const ids = state.memberAssets.map((row) => row.asset?.asset_id).filter(Boolean);
-  return ids.includes("gold") ? [...new Set(ids)] : ["gold", ...new Set(ids)];
+  return [...new Set(ids)];
 }
 
 function registerMemberAssets(rows) {
@@ -356,7 +324,7 @@ function registerMemberAssets(rows) {
       name,
       shortName: name,
       eyebrow: `${code} · ${String(item.category || "ASSET").replaceAll("_", " ").toUpperCase()} OBSERVATORY`,
-      memberOnly: item.asset_id !== "gold",
+      memberOnly: true,
       category: item.category,
       currency: item.currency,
       exchange: item.exchange,
@@ -378,8 +346,6 @@ function applyMemberAssetOrder(assetIds) {
 
 function registerMemberSummaries(rows) {
   const summaries = new Map();
-  const publicGold = state.assetSummaries.get("gold");
-  if (publicGold) summaries.set("gold", publicGold);
   for (const row of Array.isArray(rows) ? rows : []) {
     if (row?.asset_id && row?.payload) {
       summaries.set(row.asset_id, row.payload);
@@ -415,7 +381,7 @@ function watchlistQuote(snapshot) {
     price: validPrice ? price.toLocaleString("zh-CN", { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—",
     change: Number.isFinite(change) ? `${change >= 0 ? "+" : ""}${change.toFixed(2)}%` : "—",
     tone: Number.isFinite(change) ? (change >= 0 ? "positive" : "negative") : "",
-    delayed: Boolean(snapshot?._watchlistCached) || freshness?.sourceFresh === false,
+    delayed: freshness?.sourceFresh === false,
     date: freshness?.lastDate || snapshot?.quote?.date || "",
   };
 }
@@ -485,13 +451,18 @@ function renderWatchlist() {
   $("#asset-count").textContent = `${watchlist.length} / 30`;
   watchlistNode.classList.toggle("sorting", state.watchlistSorting);
   watchlistNode.setAttribute("aria-label", state.watchlistSorting ? "自选观察列表，排序模式" : "自选观察列表");
+  if (!watchlist.length) {
+    watchlistNode.innerHTML = '<p class="watchlist-empty">请注册会员，登录系统，添加我的观察列表。</p>';
+    renderAssetSearchResults();
+    return;
+  }
   watchlistNode.innerHTML = watchlist.map((assetId) => {
     const asset = assets[assetId];
     if (!asset) return "";
     const row = memberAssetRow(assetId);
-    const status = assetId === "gold" ? "ready" : row?.status || asset.status || "initializing";
+    const status = row?.status || asset.status || "initializing";
     const ready = status === "ready";
-    const removable = member && assetId !== "gold";
+    const removable = member;
     const snapshot = ready ? watchlistSnapshot(assetId) : null;
     const quote = watchlistQuote(snapshot);
     const weekly = watchlistWeekly(snapshot, status);
@@ -814,13 +785,19 @@ async function handleAddAsset(index) {
 
 async function handleRemoveAsset(assetId) {
   const asset = assets[assetId];
-  if (!asset || assetId === "gold") return;
+  if (!asset) return;
   if (!window.confirm(`从“我的自选”移除${asset.name}？共享行情数据不会被删除。`)) return;
   try {
     await removeMemberAsset(assetId);
     await refreshMemberLibrary({ quiet: true });
     if (state.assetId === assetId) {
-      await loadAsset("gold", { historyMode: state.watchlistView ? "none" : "push", targetRoute: "overview" });
+      const nextAssetId = firstAccessibleAssetId();
+      if (nextAssetId) {
+        await loadAsset(nextAssetId, { historyMode: state.watchlistView ? "none" : "push", targetRoute: "overview" });
+      } else {
+        normalizeRoute();
+        renderWatchlist();
+      }
     }
   } catch (error) {
     window.alert(memberErrorMessage(error));
@@ -1043,9 +1020,11 @@ function clearCharts() {
 }
 
 function syncPageMode() {
-  const watchlistView = mobileLayout.matches && locationContext().view === "watchlist";
+  const emptyWatchlist = readWatchlist().length === 0;
+  const watchlistView = mobileLayout.matches && (locationContext().view === "watchlist" || emptyWatchlist);
   state.watchlistView = watchlistView;
   document.body.classList.toggle("watchlist-view", watchlistView);
+  document.body.classList.toggle("empty-watchlist", emptyWatchlist);
   $('meta[name="theme-color"]').content = watchlistView ? "#082d43" : "#f4f7fa";
   if (watchlistView) {
     document.body.classList.remove("methodology-view");
@@ -1095,26 +1074,6 @@ function activateRoute() {
 }
 
 const wait = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-
-async function loadJson(path, { attempts = 2, timeoutMs = 8000 } = {}) {
-  let lastError;
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const response = await fetch(path, { cache: "no-store", signal: controller.signal });
-      if (!response.ok) throw new Error(`${path} 返回 HTTP ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      lastError = error;
-      if (attempt < attempts) await wait(350 * attempt);
-    } finally {
-      window.clearTimeout(timeout);
-    }
-  }
-  if (lastError?.name === "AbortError") throw new Error("数据请求超时，请检查网络后重试。");
-  throw lastError;
-}
 
 function loadChartLibrary() {
   if (window.LightweightCharts) return Promise.resolve();
@@ -2480,16 +2439,11 @@ async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFro
   $("#loading-state").hidden = false;
   $("#error-state").hidden = true;
   try {
-    const publicGoldRefresh = assetId === "gold" ? state.publicGoldRefresh : null;
-    if (publicGoldRefresh) state.publicGoldRefresh = null;
-    const current = publicGoldRefresh
-      ? await publicGoldRefresh
-      : await loadAssetResource(assetId, "current.json", { attempts: 3, timeoutMs: 9000 });
+    const current = await loadAssetResource(assetId, "current.json");
     if (token !== state.loadToken || assetId !== state.assetId) return;
     updateAssetPresentationFromSnapshot(assetId, current);
     state.current = current;
     state.assetSummaries.set(assetId, current);
-    if (assetId === "gold") cachePublicGoldSummary(current);
     updateHeader();
     renderWatchlist();
     renderOverview();
@@ -2509,7 +2463,7 @@ async function resetMemberUiAfterSessionEnd() {
   finishWatchlistDrag();
   state.memberProfile = null;
   state.memberAssets = [];
-  state.assetSummaries = new Map(state.assetSummaries.has("gold") ? [["gold", state.assetSummaries.get("gold")]] : []);
+  state.assetSummaries = new Map();
   state.memberJobs = [];
   state.watchlistSorting = false;
   state.watchlistOrderBeforeEdit = [];
@@ -2519,10 +2473,7 @@ async function resetMemberUiAfterSessionEnd() {
   closeMemberDialog();
   renderMemberControls();
   renderWatchlist();
-  if (assets[state.assetId]?.memberOnly) {
-    const targetRoute = routeFromLocation() === "methodology" ? "methodology" : "overview";
-    await loadAsset("gold", { historyMode: state.watchlistView ? "none" : "push", targetRoute });
-  }
+  normalizeRoute();
 }
 
 async function handleMemberLogout() {
@@ -2561,6 +2512,10 @@ async function handleMemberLogin(event) {
       } else {
         await loadAsset(pendingAssetId, { historyMode: "push", targetRoute: pendingRoute });
       }
+    } else {
+      const route = normalizeRoute();
+      renderWatchlist();
+      if (route && !state.watchlistView) await loadAsset(state.assetId, { historyMode: "replace", targetRoute: route });
     }
   } catch (error) {
     errorNode.textContent = memberErrorMessage(error);
@@ -2628,17 +2583,19 @@ async function handlePasswordUpdate(event) {
 }
 
 async function boot() {
-  restoreCachedPublicGoldSummary();
   renderMemberControls();
   renderWatchlist();
-  state.publicGoldRefresh = refreshPublicGoldSummary();
-  state.publicGoldRefresh.catch((error) => console.warn("Unable to refresh the public GOLD summary", error));
   state.memberProfile = await restoreMemberSession();
   state.authReady = true;
   renderMemberControls();
   if (isMember()) await refreshMemberLibrary({ quiet: true });
   const route = normalizeRoute();
   renderWatchlist();
+  if (!route) return;
+  if (state.watchlistView) {
+    activateRoute();
+    return;
+  }
   if (route === "methodology") {
     renderMethodology();
     activateRoute();
@@ -2778,6 +2735,12 @@ window.addEventListener("online", refreshMemberLibraryOnResume);
 window.setInterval(heartbeatMemberDeviceSession, 60_000);
 window.addEventListener("popstate", () => {
   let context = locationContext();
+  const firstAssetId = firstAccessibleAssetId();
+  if (!firstAssetId) {
+    normalizeRoute();
+    renderWatchlist();
+    return;
+  }
   if (context.view === "watchlist" && mobileLayout.matches) {
     syncPageMode();
     renderWatchlist();
@@ -2786,15 +2749,9 @@ window.addEventListener("popstate", () => {
   }
   syncPageMode();
   if (!canAccessAsset(context.assetId)) {
-    if (context.route === "methodology") {
-      history.replaceState({ assetId: "gold", route: context.route }, "", routePath(context.route, "gold"));
-      context = { assetId: "gold", route: context.route };
-    } else {
-      const blocked = context;
-      history.replaceState({ assetId: "gold", route: "overview" }, "", routePath("overview", "gold"));
-      openMemberLogin(blocked.assetId, blocked.route);
-      context = { assetId: "gold", route: "overview" };
-    }
+    const fallbackRoute = context.route === "methodology" ? context.route : "overview";
+    history.replaceState({ assetId: firstAssetId, route: fallbackRoute }, "", routePath(fallbackRoute, firstAssetId));
+    context = { assetId: firstAssetId, route: fallbackRoute };
   }
   if (context.route === "dca" && !canUseDca()) {
     const blockedAssetId = context.assetId;
@@ -2810,6 +2767,11 @@ window.addEventListener("popstate", () => {
   }
 });
 mobileLayout.addEventListener?.("change", () => {
+  if (!firstAccessibleAssetId()) {
+    normalizeRoute();
+    renderWatchlist();
+    return;
+  }
   const context = locationContext();
   if (!mobileLayout.matches && context.view === "watchlist") {
     const route = "overview";

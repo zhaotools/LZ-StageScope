@@ -162,6 +162,21 @@ button { font: inherit; }
 }
 .watchlist-table-header span:not(:first-child) { text-align: right; }
 .asset-watchlist { display: grid; gap: 4px; margin-top: 5px; }
+.watchlist-empty {
+  margin: 7px 0 0;
+  padding: 13px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.66);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+body.empty-watchlist .application-content main,
+body.empty-watchlist .application-content .module-tabs,
+body.empty-watchlist .application-content .mobile-detail-toolbar,
+body.empty-watchlist .application-content .mobile-nav { display: none; }
 .asset-watchlist.sorting .watchlist-asset {
   padding-left: 28px;
   border-color: rgba(128, 202, 240, 0.17);
