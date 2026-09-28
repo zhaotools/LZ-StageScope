@@ -1272,10 +1272,15 @@ function updateHeader() {
   $("#daily-date").textContent = fmtDate(current.daily.asOf);
   $("#weekly-date").textContent = fmtDate(current.weekly.asOf);
   const generatedAt = new Date(current.generatedAt);
-  $("#generated-at").textContent = generatedAt.toLocaleString("zh-CN", {
-    month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
+  $("#generated-date").textContent = generatedAt.toLocaleDateString("zh-CN", {
+    timeZone: "Asia/Shanghai", month: "2-digit", day: "2-digit",
   }).replaceAll("/", "-");
-  $("#generated-at").title = generatedAt.toLocaleString("zh-CN", { hour12: false });
+  $("#generated-time").textContent = generatedAt.toLocaleTimeString("zh-CN", {
+    timeZone: "Asia/Shanghai", hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+  $("#generated-at").title = generatedAt.toLocaleString("zh-CN", {
+    timeZone: "Asia/Shanghai", hour12: false,
+  });
   renderWatchlist();
 }
 

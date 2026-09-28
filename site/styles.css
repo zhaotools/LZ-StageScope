@@ -551,6 +551,7 @@ h1 {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+#generated-date::after { content: " "; }
 
 .module-tabs {
   position: sticky;
@@ -1582,9 +1583,10 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
     border-top: 1px solid rgba(143, 100, 26, 0.18);
     border-left: 0;
   }
-  .quote-block strong { font-size: clamp(21px, 6.2vw, 25px); }
-  .quote-value { gap: 4px; }
-  .quote-value > span, #quote-change { font-size: 9px; }
+  .quote-block strong { flex: 0 1 auto; min-width: 0; font-size: clamp(18px, 4.8vw, 21px); }
+  .quote-value { gap: 2px; }
+  .quote-value > span { flex: 0 0 auto; font-size: 8px; letter-spacing: 0.02em; }
+  #quote-change { font-size: 9px; }
   .hero-meta {
     grid-column: 2;
     grid-row: 2;
@@ -1597,6 +1599,9 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .hero-meta div { display: flex; flex-direction: column; justify-content: center; padding: 2px 5px; }
   .hero-meta dt { font-size: 8.5px; white-space: nowrap; }
   .hero-meta dd { margin-top: 4px; font-size: 9px; }
+  #generated-at { overflow: visible; line-height: 1.15; text-overflow: clip; white-space: normal; }
+  #generated-at span { display: block; }
+  #generated-date::after { content: ""; }
   .module-tabs { display: none; }
   .route-panel { padding-top: 14px; padding-bottom: 92px; }
   .overview-snapshot { gap: 12px; }
