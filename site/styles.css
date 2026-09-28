@@ -275,8 +275,7 @@ body.watchlist-dragging { cursor: grabbing; }
 .top-member-controls { display: grid; }
 .top-member-login,
 .top-member-account,
-.top-method-link,
-.top-install-button {
+.top-method-link {
   min-height: 34px;
   border: 1px solid var(--line-strong);
   border-radius: 10px;
@@ -287,12 +286,10 @@ body.watchlist-dragging { cursor: grabbing; }
   white-space: nowrap;
 }
 .top-member-login,
-.top-method-link,
-.top-install-button { display: flex; align-items: center; justify-content: center; padding: 8px 13px; cursor: pointer; }
+.top-method-link { display: flex; align-items: center; justify-content: center; padding: 8px 13px; cursor: pointer; }
 .top-member-login { color: var(--navy); font-weight: 750; }
 .top-member-login:hover,
-.top-method-link:hover,
-.top-install-button:hover { color: var(--navy); border-color: rgba(36, 120, 165, 0.4); background: var(--surface-blue); }
+.top-method-link:hover { color: var(--navy); border-color: rgba(36, 120, 165, 0.4); background: var(--surface-blue); }
 .top-member-login:disabled { color: var(--muted-light); cursor: wait; }
 .top-member-account { display: grid; grid-template-columns: minmax(0, 1fr) auto; overflow: hidden; }
 .top-member-account button { border: 0; color: inherit; background: transparent; cursor: pointer; }
@@ -304,7 +301,6 @@ body.watchlist-dragging { cursor: grabbing; }
 .top-member-account span { color: var(--ink-strong); font-size: 10px; font-weight: 800; }
 .top-member-account small { margin-top: 1px; color: var(--muted-light); font-size: 7px; }
 .top-method-link.active { color: var(--navy); border-color: transparent; background: var(--surface-blue); font-weight: 750; }
-.top-install-button:disabled { color: var(--muted-light); background: var(--surface-muted); cursor: default; }
 
 .asset-picker { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; }
 body.picker-open { overflow: hidden; }
@@ -1536,8 +1532,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .top-brand small { display: none; }
   .top-utility-actions { gap: 5px; }
   .top-member-login,
-  .top-method-link,
-  .top-install-button { padding-inline: 9px; }
+  .top-method-link { padding-inline: 9px; }
   .top-member-account > button:first-child { min-width: 74px; max-width: 112px; padding-inline: 8px; }
   .top-member-account > button:last-child { padding-inline: 8px; }
   .asset-hero { grid-template-columns: 1fr; gap: 7px; margin-top: 10px; padding: 10px 14px; border-radius: 16px; }

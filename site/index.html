@@ -22,7 +22,7 @@
       #app-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:28px;color:#fff;background:#082d43;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;opacity:1;visibility:visible;transition:opacity .36s ease,visibility .36s ease;animation:app-splash-failsafe .3s ease 12s forwards}#app-splash.is-ready{pointer-events:none;opacity:0;visibility:hidden;animation:none}.app-splash-inner{display:grid;width:min(290px,82vw);justify-items:center;text-align:center;transform:translateY(-7svh)}.app-splash-mark{display:grid;width:92px;height:92px;margin-bottom:22px;place-items:center;border:1px solid rgba(126,192,226,.28);border-radius:24px;background:#0b344b;box-shadow:0 20px 55px rgba(0,9,20,.28)}.app-splash-mark img{display:block;width:76px;height:76px;border-radius:18px}.app-splash-title{margin:0;color:#fff;font-size:24px;font-weight:760;letter-spacing:.01em}.app-splash-brand{margin:7px 0 0;color:rgba(255,255,255,.58);font-size:11px;font-weight:760;letter-spacing:.2em}.app-splash-rule{width:42px;height:2px;margin:22px 0 17px;border-radius:2px;background:#a87320}.app-splash-loading{display:grid;gap:16px;justify-items:center;transform:translateY(15svh)}.app-splash-status{margin:0;color:rgba(255,255,255,.7);font-size:11px;letter-spacing:.08em}.app-splash-progress{width:116px;height:2px;overflow:hidden;border-radius:2px;background:rgba(255,255,255,.12)}.app-splash-progress span{display:block;width:48%;height:100%;border-radius:inherit;background:#5eb4dc;animation:app-splash-progress 1.35s ease-in-out infinite}.app-splash-note{position:absolute;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));left:20px;margin:0;color:rgba(255,255,255,.34);font-size:9px;letter-spacing:.12em;text-align:center}@keyframes app-splash-progress{0%{transform:translateX(-110%)}100%{transform:translateX(220%)}}@keyframes app-splash-failsafe{to{pointer-events:none;opacity:0;visibility:hidden}}@media(prefers-reduced-motion:reduce){#app-splash{transition:none}.app-splash-progress span{animation:none;width:100%;opacity:.7}}
       @media (min-width:761px) and (display-mode:browser) and (pointer:fine){#app-splash{display:none}}
     </style>
-    <link rel="stylesheet" href="./styles.css?v=1.3.1">
+    <link rel="stylesheet" href="./styles.css?v=1.3.2">
   </head>
   <body class="app-booting" aria-busy="true">
     <div id="app-splash" role="status" aria-live="polite" aria-label="正在加载我的趋势观察">
@@ -49,8 +49,7 @@
             <span><strong>我的趋势观察</strong><small>LZ-StageScope</small></span>
           </a>
           <div class="mobile-watchlist-utilities" aria-label="移动端工具">
-            <button type="button" data-install-action>安装</button>
-            <a href="./gold/methodology" data-route="methodology">方法</a>
+            <a href="./gold/methodology" data-route="methodology">框架与数据</a>
             <button type="button" data-member-action><span>登录</span></button>
           </div>
         </div>
@@ -76,8 +75,7 @@
           <span><strong>我的趋势观察</strong><small>LZ-StageScope</small></span>
         </a>
         <div class="top-utility-actions">
-          <button class="top-install-button" id="install-button" type="button">安装应用</button>
-          <a class="top-method-link" href="./gold/methodology" data-route="methodology">方法与数据</a>
+          <a class="top-method-link" href="./gold/methodology" data-route="methodology">框架与数据</a>
           <div class="top-member-controls" aria-live="polite">
             <button class="top-member-login" id="member-login-button" type="button" disabled>检查登录…</button>
             <div class="top-member-account" id="member-account" hidden>
@@ -296,7 +294,7 @@
 
       <section class="route-panel shell" data-panel="methodology" hidden>
         <div class="section-heading">
-          <div><p class="eyebrow">METHOD & DATA</p><h2>方法与数据</h2></div>
+          <div><p class="eyebrow">FRAMEWORK & DATA</p><h2>框架与数据</h2></div>
         </div>
         <div class="method-grid">
           <article class="panel method-card"><span>01</span><h3>周线决定战略背景</h3><p>LZ-4Stage 只使用完整周线，识别当前阶段、转换状态和阶段证据。</p></article>
@@ -315,7 +313,7 @@
 
       <footer class="site-footer shell">
       <span id="footer-label">LZ-StageScope · 黄金观察</span>
-      <a href="./gold/methodology" data-route="methodology">基于完成周期 · 查看方法与数据</a>
+      <a href="./gold/methodology" data-route="methodology">基于完成周期 · 查看框架与数据</a>
       </footer>
 
       <nav class="mobile-nav" aria-label="移动端导航">
@@ -408,6 +406,6 @@
     </div>
 
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script type="module" src="./app.js?v=1.3.4"></script>
+    <script type="module" src="./app.js?v=1.3.5"></script>
   </body>
 </html>

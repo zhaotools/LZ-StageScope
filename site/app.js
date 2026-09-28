@@ -1066,7 +1066,7 @@ function syncRouteShell(route) {
   const methodologyView = route === "methodology";
   document.body.classList.toggle("methodology-view", methodologyView);
   if (methodologyView) {
-    document.title = "LZ-StageScope · 方法与数据";
+    document.title = "LZ-StageScope · 框架与数据";
   } else if (state.current) {
     document.title = `LZ-StageScope · ${assets[state.assetId].name}观察`;
   }
@@ -2743,42 +2743,6 @@ $("#dca-range-select").addEventListener("change", (event) => {
   requestAnimationFrame(() => requestAnimationFrame(chartEntry.redrawDecoration));
 });
 
-let deferredInstall;
-const installButton = $("#install-button");
-const installButtons = [installButton, ...$$('[data-install-action]')];
-const isInstalledApp = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-const syncInstallButton = () => {
-  installButtons.forEach((button) => {
-    button.hidden = false;
-    button.textContent = isInstalledApp() ? "已安装" : button === installButton ? "安装应用" : "安装";
-    button.disabled = isInstalledApp();
-  });
-};
-window.addEventListener("beforeinstallprompt", (event) => {
-  event.preventDefault();
-  deferredInstall = event;
-  syncInstallButton();
-});
-window.addEventListener("appinstalled", () => {
-  deferredInstall = null;
-  syncInstallButton();
-});
-const requestInstall = async () => {
-  if (!deferredInstall) {
-    const appleDevice = /Macintosh|iPhone|iPad|iPod/.test(navigator.userAgent);
-    window.alert(appleDevice
-      ? "请打开浏览器的“分享”菜单，选择“添加到主屏幕”或“添加到程序坞”。"
-      : "请打开浏览器菜单，选择“安装应用”或“添加到主屏幕”。");
-    return;
-  }
-  deferredInstall.prompt();
-  const choice = await deferredInstall.userChoice;
-  deferredInstall = null;
-  if (choice.outcome === "accepted") syncInstallButton();
-};
-installButtons.forEach((button) => button.addEventListener("click", requestInstall));
-syncInstallButton();
-
 if ("serviceWorker" in navigator) {
   const localPreview = ["127.0.0.1", "localhost"].includes(location.hostname);
   window.addEventListener("load", async () => {
@@ -2788,7 +2752,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.4", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.5", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
