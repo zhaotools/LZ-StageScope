@@ -2026,9 +2026,21 @@ function installStageTransitions(container, chart, candle, series, history) {
       layer.append(badge);
     });
   };
-  chart.timeScale().subscribeVisibleLogicalRangeChange?.(redraw);
-  requestAnimationFrame(redraw);
-  return redraw;
+  let layoutRedrawToken = 0;
+  const redrawAfterLayoutSettles = () => {
+    const token = ++layoutRedrawToken;
+    let frame = 0;
+    const redrawFrame = () => {
+      if (token !== layoutRedrawToken) return;
+      redraw();
+      frame += 1;
+      if (frame < 24) requestAnimationFrame(redrawFrame);
+    };
+    requestAnimationFrame(redrawFrame);
+  };
+  chart.timeScale().subscribeVisibleLogicalRangeChange?.(redrawAfterLayoutSettles);
+  redrawAfterLayoutSettles();
+  return redrawAfterLayoutSettles;
 }
 
 function bandMarkerPresentation(status) {
@@ -2794,7 +2806,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.10", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.11", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
