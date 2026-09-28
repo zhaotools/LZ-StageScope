@@ -1210,7 +1210,7 @@ async function ensureRouteData(route, { force = false } = {}) {
 
 function signalClass(value) {
   const text = String(value || "");
-  if (/支持|顺风|偏强|多头|绿灯|S2/.test(text)) return "support";
+  if (/支持|顺风|偏强|多头|牛市|绿灯|S2/.test(text)) return "support";
   if (/压力|逆风|压制|偏弱|熊市|红灯|S4/.test(text)) return "pressure";
   return "neutral";
 }
@@ -1344,6 +1344,12 @@ function renderOverview() {
     : `行情、周线和日线数据已更新至 ${fmtDate(current.daily.asOf)}。`;
 }
 
+function weeklyDisplayExplanation(value) {
+  return String(value || "")
+    .replace(/\s*52周位置仍与目标阶段存在分歧。?/g, "")
+    .trim();
+}
+
 function renderWeekly() {
   const current = state.current.weekly.current;
   const confirmed = current.confirmed || {};
@@ -1361,6 +1367,7 @@ function renderWeekly() {
     ? `${(slope * 100).toLocaleString("zh-CN", { maximumFractionDigits: 2 })}%`
     : "—";
   const ma30TrendClass = slope > 0 ? "up" : slope < 0 ? "down" : "flat";
+  const explanation = weeklyDisplayExplanation(current.explanation || current.observation?.reason || "");
   $("#weekly-stats").innerHTML = `
     <span class="panel-kicker">CURRENT STAGE</span>
     <div class="big-state ${currentStageClass}"><span>${esc(confirmedLabel)}</span>${currentStageTitle ? `<small>${esc(currentStageTitle)}</small>` : ""}</div>
@@ -1374,7 +1381,7 @@ function renderWeekly() {
       <div><dt>阶段置信度</dt><dd>${fmt(current.confidence, 0)}%</dd></div>
     </dl>
     <div class="metric-track" aria-label="阶段置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
-    <p class="explanation">${esc(current.explanation || current.observation?.reason || "")}</p>
+    <p class="explanation">${esc(explanation)}</p>
   `;
   $("#weekly-evidence").innerHTML = (current.evidence || []).map((item) => `
     <div class="evidence-item">
@@ -1395,6 +1402,9 @@ function renderWeekly() {
 function renderDaily() {
   const summary = state.current.daily.summary;
   const fusionTone = signalClass(summary.fusion.status);
+  const bullBearTone = signalClass(summary.bullBear.status);
+  const trafficTone = signalClass(summary.traffic.status);
+  const bandTone = bandStatusTone(summary.band.status).className;
   const latestBar = state.daily.series?.at(-1) || {};
   const ma200Distance = Number(latestBar.ma200)
     ? ((Number(latestBar.close) / Number(latestBar.ma200)) - 1) * 100
@@ -1404,12 +1414,11 @@ function renderDaily() {
     <div class="big-state ${fusionTone}">${esc(summary.fusion.status)}</div>
     <dl class="stat-list">
       <div><dt>融合得分</dt><dd>${fmt(summary.fusion.score, 0)}</dd></div>
-      <div><dt>牛熊状态</dt><dd>${esc(summary.bullBear.status)}</dd></div>
-      <div><dt>趋势交通灯</dt><dd>${esc(summary.traffic.status)}</dd></div>
-      <div><dt>波动状态</dt><dd>${esc(summary.band.status)}</dd></div>
+      <div><dt>牛熊状态</dt><dd class="daily-state-value ${bullBearTone}">${esc(summary.bullBear.status)}</dd></div>
+      <div><dt>趋势交通灯</dt><dd class="daily-state-value ${trafficTone}">${esc(summary.traffic.status)}</dd></div>
+      <div><dt>波动状态</dt><dd class="daily-state-value ${bandTone}">${esc(summary.band.status)}</dd></div>
       <div><dt>MA200偏离</dt><dd class="${returnTone(ma200Distance)}">${Number.isFinite(ma200Distance) ? `${ma200Distance > 0 ? "+" : ""}${fmt(ma200Distance, 2)}%` : "—"}</dd></div>
     </dl>
-    <div class="metric-track" aria-label="融合得分 ${fmt(summary.fusion.score, 0)}"><span style="--metric: ${metricPercent(summary.fusion.score)}%"></span></div>
     <p class="explanation">${esc(summary.fusion.advice)}</p>
   `;
   $("#daily-change-summary").innerHTML = `
@@ -1724,7 +1733,7 @@ function chartApi(container, kind) {
     leftPriceScale: {
       visible: kind === "dca",
       borderColor: "rgba(16,40,59,.12)",
-      scaleMargins: { top: 0.08, bottom: 0.08 },
+      scaleMargins: { top: 0.08, bottom: kind === "dca" ? 0.1 : 0.08 },
     },
     timeScale: { borderColor: "rgba(16,40,59,.12)", timeVisible: kind === "daily" || kind === "dca" },
     crosshair: { vertLine: { color: "rgba(36,120,165,.36)" }, horzLine: { color: "rgba(36,120,165,.36)" } },
@@ -2835,7 +2844,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.16", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.17", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

@@ -644,7 +644,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .snapshot-headline,
 .snapshot-logic .lead-copy {
   color: var(--text-deep-gray);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.7;
 }
@@ -715,7 +715,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .weekly-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(250px, 0.82fr); }
 .dca-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(270px, 0.9fr); align-items: stretch; }
 .dca-chart-panel { display: flex; flex-direction: column; }
-.dca-chart-panel .dca-chart { flex: 1 1 auto; height: auto; min-height: 500px; }
+.dca-chart-panel .dca-chart { flex: 1 1 auto; height: auto; min-height: 470px; }
 .dca-side-stack { display: grid; min-width: 0; grid-template-rows: auto 1fr; gap: 10px; }
 .lower-grid { grid-template-columns: 1fr 1fr; margin-top: 17px; }
 .panel {
@@ -1144,6 +1144,16 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .big-state.support { color: var(--green); }
 .big-state.pressure { color: var(--red); }
 .big-state.neutral { color: var(--gold-deep); }
+#daily-summary .big-state { font-size: 30.4px; }
+.daily-state-value.support { color: var(--green); }
+.daily-state-value.pressure { color: var(--red); }
+.daily-state-value.neutral { color: var(--gold-deep); }
+.daily-state-value.band-tone-green { color: #067f3d; }
+.daily-state-value.band-tone-blue { color: #1769dc; }
+.daily-state-value.band-tone-orange { color: #d65f00; }
+.daily-state-value.band-tone-amber { color: #a66f0d; }
+.daily-state-value.band-tone-red { color: #c52d39; }
+.daily-state-value.band-tone-neutral { color: #6f65a4; }
 .big-state.stage-s1, .weekly-stage-value.stage-s1 { color: #4b82c3; }
 .big-state.stage-s2, .weekly-stage-value.stage-s2 { color: #16835d; }
 .big-state.stage-s3, .weekly-stage-value.stage-s3 { color: #c98632; }
@@ -1453,7 +1463,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .detail-grid { grid-template-columns: 1fr; }
   .weekly-detail-grid { grid-template-columns: 1fr; }
   .dca-detail-grid { grid-template-columns: 1fr; }
-  .dca-chart-panel .dca-chart { flex: none; height: 440px; min-height: 440px; }
+  .dca-chart-panel .dca-chart { flex: none; height: 420px; min-height: 420px; }
   .daily-side-stack { gap: 12px; }
   .stat-panel { min-height: 330px; }
   .daily-side-stack .stat-panel { min-height: 0; }
@@ -1585,7 +1595,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .dca-chart-tools .chart-legend { max-width: none; }
   .stage-key, .band-marker-key { padding-inline: 4px; }
   .chart { height: 350px; }
-  .dca-chart-panel .dca-chart { flex: none; height: 350px; min-height: 350px; }
+  .dca-chart-panel .dca-chart { flex: none; height: 330px; min-height: 330px; }
   .dca-current-panel { min-height: 0; }
   .dca-tier-statistics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dca-signals-panel { padding: 18px 12px 12px; }
