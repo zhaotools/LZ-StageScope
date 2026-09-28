@@ -1371,8 +1371,9 @@ function renderWeekly() {
       <div><dt>MA10</dt><dd>${fmt(current.ma10, 1)}</dd></div>
       <div><dt>MA30</dt><dd>${fmt(current.ma30, 1)}</dd></div>
       <div><dt>MA30趋势</dt><dd class="weekly-ma30-trend ${ma30TrendClass}">${esc(ma30Direction)}<span>｜5周斜率 ${esc(ma30Slope)}</span></dd></div>
+      <div><dt>阶段置信度</dt><dd>${fmt(current.confidence, 0)}%</dd></div>
     </dl>
-    <div class="metric-track" aria-label="证据置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
+    <div class="metric-track" aria-label="阶段置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
     <p class="explanation">${esc(current.explanation || current.observation?.reason || "")}</p>
   `;
   $("#weekly-evidence").innerHTML = (current.evidence || []).map((item) => `
@@ -1785,6 +1786,15 @@ function seriesWithConfirmedStages(series, history) {
   });
 }
 
+function trailingSeriesByMonths(series, months) {
+  const latestDate = series.at(-1)?.time || series.at(-1)?.date;
+  if (!latestDate || !months) return series;
+  const cutoff = shiftIsoMonths(latestDate, -months);
+  const firstInside = series.findIndex((bar) => String(bar.time || bar.date) >= cutoff);
+  if (firstInside < 0) return series;
+  return series.slice(Math.max(0, firstInside - 1));
+}
+
 function installStageBackground(container, chart, series) {
   const backgroundLayer = document.createElement("div");
   const labelLayer = document.createElement("div");
@@ -2184,16 +2194,23 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
 }
 
 function renderWeeklyChart() {
-  const completedSeries = seriesWithConfirmedStages(
+  const stagedSeries = seriesWithConfirmedStages(
     (state.weekly?.series || []).filter((bar) => !bar.provisional),
     state.weekly?.stageHistory,
   );
+  const completedSeries = trailingSeriesByMonths(stagedSeries, 48);
+  const chartElement = document.getElementById("weekly-chart");
+  if (chartElement && completedSeries.length) {
+    chartElement.dataset.visibleFrom = completedSeries[0].time || completedSeries[0].date;
+    chartElement.dataset.visibleTo = completedSeries.at(-1).time || completedSeries.at(-1).date;
+    chartElement.dataset.visibleBars = String(completedSeries.length);
+  }
   renderPriceChart(
     "weekly-chart",
     completedSeries,
     [["ma30", "#2478a5", "MA30"]],
     "weekly",
-    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, visibleMonths: 48, spreadVisibleRange: true, limitZoomToData: true },
+    { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, limitZoomToData: true },
   );
 }
 
@@ -2759,7 +2776,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.8", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.9", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

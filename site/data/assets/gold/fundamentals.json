@@ -1,6 +1,6 @@
 {
   "schemaVersion": "gold-fundamentals-v1",
-  "generatedAt": "2026-09-28T09:32:29+00:00",
+  "generatedAt": "2026-09-28T10:21:47+00:00",
   "asset": "gold",
   "scope": "macro-minimum",
   "factors": [
@@ -146,11 +146,26 @@
   "recentNews": {
     "schemaVersion": "asset-news-v1",
     "asset": "gold",
-    "generatedAt": "2026-09-28T09:32:32+00:00",
+    "generatedAt": "2026-09-28T10:21:50+00:00",
     "asOf": "2026-09-28",
     "status": "ok",
     "maxItems": 5,
     "items": [
+      {
+        "id": "202609283885285034",
+        "title": "周大生：当前一口价黄金可以作为结构性改善毛利率的产品，但不会取代计重黄金产品",
+        "publisher": "南方财经网",
+        "publishedAt": "2026-09-28T09:40:00Z",
+        "url": "https://finance.eastmoney.com/a/202609283885285034.html",
+        "eventType": "产品与战略",
+        "selectionReason": "中文报道涉及产品与战略，且标题与该资产直接相关。",
+        "relatedTickers": [
+          "GC=F",
+          "GOLD"
+        ],
+        "sourceType": "chinese-full-article-link",
+        "language": "zh-CN"
+      },
       {
         "id": "202609283885097248",
         "title": "金价破4200美元，黄金ETF资金转向，机构建议逢跌分批建仓",
@@ -202,21 +217,6 @@
         "publisher": "每日经济新闻",
         "publishedAt": "2026-09-23T02:01:13Z",
         "url": "https://stock.eastmoney.com/a/202609233882390592.html",
-        "eventType": "资金与持仓",
-        "selectionReason": "中文报道涉及资金与持仓，且标题与该资产直接相关。",
-        "relatedTickers": [
-          "GC=F",
-          "GOLD"
-        ],
-        "sourceType": "chinese-full-article-link",
-        "language": "zh-CN"
-      },
-      {
-        "id": "202609213879923928",
-        "title": "美伊局势正处于“决策阶段”，金价失守4400美元整数关口，黄金ETF华夏（518850）份额规模创新高",
-        "publisher": "每日经济新闻",
-        "publishedAt": "2026-09-21T05:46:21Z",
-        "url": "https://stock.eastmoney.com/a/202609213879923928.html",
         "eventType": "资金与持仓",
         "selectionReason": "中文报道涉及资金与持仓，且标题与该资产直接相关。",
         "relatedTickers": [
