@@ -1,4 +1,4 @@
-const CACHE = "lz-stagescope-v1.3.24";
+const CACHE = "lz-stagescope-v1.3.25";
 const SHELL = [
   "./",
   "./index.html",
@@ -13,9 +13,9 @@ const SHELL = [
   "./icons/safari-pinned-tab.svg",
   "./icons/brand-on-dark-v2.png",
   "./icons/brand-on-light-v2.png",
-  "./icons/icon-180-v2.png",
-  "./icons/icon-192-v2.png",
-  "./icons/icon-512-v2.png",
+  "./icons/icon-180-v3.png",
+  "./icons/icon-192-v3.png",
+  "./icons/icon-512-v3.png",
 ];
 
 self.addEventListener("install", (event) => {
