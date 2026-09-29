@@ -184,7 +184,16 @@ html[data-watchlist-theme="light"] .theme-icon-moon { display: block; }
 .watchlist-sort-button:hover { border-color: rgba(255, 255, 255, 0.42); background: rgba(255, 255, 255, 0.14); }
 .asset-add-button:disabled,
 .watchlist-sort-button:disabled { opacity: 0.42; cursor: default; }
-.watchlist-sort-button > span { color: inherit; font-size: inherit; font-weight: inherit; letter-spacing: 0; line-height: 1; }
+.watchlist-sort-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .watchlist-mobile-actions { display: flex; align-items: center; gap: 6px; }
 .watchlist-table-header {
   display: grid;

@@ -496,7 +496,6 @@ function renderWatchlist() {
   sortButton.title = state.watchlistSorting
     ? "完成并保存排序"
     : state.watchlistCategory !== "all" ? "请先切换到“自选”后调整顺序" : "调整资产顺序";
-  sortButton.querySelector("span").textContent = state.watchlistOrderSaving ? "…" : state.watchlistSorting ? "✓" : "⇅";
   $("#asset-count").textContent = `${watchlist.length} / 30`;
   watchlistNode.classList.toggle("sorting", state.watchlistSorting);
   watchlistNode.setAttribute("aria-label", state.watchlistSorting ? "自选观察列表，排序模式" : "自选观察列表");
@@ -2888,7 +2887,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.27", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.28", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
