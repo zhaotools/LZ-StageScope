@@ -2728,7 +2728,8 @@ document.addEventListener("click", (event) => {
     if (fromWatchlist) state.watchlistScrollY = window.scrollY;
     const currentRoute = routeFromLocation();
     const targetRoute = fromWatchlist || currentRoute === "methodology" ? "overview" : currentRoute;
-    if (assetId !== state.assetId || targetRoute !== currentRoute) {
+    const needsAssetLoad = assetId !== state.assetId || targetRoute !== currentRoute || !state.current;
+    if (needsAssetLoad) {
       void loadAsset(assetId, { historyMode: "push", targetRoute });
     } else if (fromWatchlist) {
       history.pushState({ assetId, route: targetRoute }, "", routePath(targetRoute, assetId));
@@ -2862,7 +2863,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.21", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.22", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
