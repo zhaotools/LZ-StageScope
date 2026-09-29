@@ -1059,7 +1059,7 @@ function syncPageMode() {
   state.watchlistView = watchlistView;
   document.body.classList.toggle("watchlist-view", watchlistView);
   document.body.classList.toggle("empty-watchlist", emptyWatchlist);
-  $('meta[name="theme-color"]').content = watchlistView ? "#082d43" : "#f4f7fa";
+  $('meta[name="theme-color"]').content = watchlistView ? "#061e2f" : "#f4f7fa";
   if (watchlistView) {
     document.body.classList.remove("methodology-view");
     document.title = "LZ-StageScope · 观察列表";
@@ -2862,7 +2862,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.20", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.21", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

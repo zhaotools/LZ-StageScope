@@ -10,7 +10,7 @@
   --text-deep-gray: #46545f;
   --muted: #6e8292;
   --muted-light: #8b9aa7;
-  --navy: #082d43;
+  --navy: #061e2f;
   --navy-soft: #eaf3f8;
   --gold: #a87320;
   --gold-deep: #8d611a;
@@ -92,7 +92,7 @@ button { font: inherit; }
   padding: 14px 12px 18px;
   overflow: hidden auto;
   color: rgba(255, 255, 255, 0.82);
-  background: #082d43;
+  background: #061e2f;
   box-shadow: 10px 0 32px rgba(7, 29, 50, 0.12);
 }
 .mobile-watchlist-topbar,
@@ -1528,7 +1528,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 @media (max-width: 760px) {
   .application-content { margin-left: 0; }
   body:not(.watchlist-view) .asset-sidebar { display: none; }
-  body.watchlist-view { min-height: 100dvh; background: #082d43; }
+  body.watchlist-view { min-height: 100dvh; background: #061e2f; }
   body.watchlist-view .application-content { display: none; }
   body.watchlist-view .asset-sidebar {
     position: relative;
