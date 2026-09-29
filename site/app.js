@@ -88,6 +88,26 @@ const ASSET_CODE_PATTERNS = {
   commodity: /^[A-Z]{1,12}(?:=F)?$/,
 };
 const WATCHLIST_CATEGORIES = new Set(["all", "us_equity", "cn_equity", "hk_equity", "crypto", "commodity"]);
+function applyWatchlistTheme(value, { persist = false } = {}) {
+  const theme = value === "light" ? "light" : "dark";
+  const targetTheme = theme === "dark" ? "light" : "dark";
+  const targetLabel = targetTheme === "light" ? "浅色" : "深色";
+  document.documentElement.dataset.watchlistTheme = theme;
+  $$("[data-watchlist-theme-toggle]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(theme === "light"));
+    button.setAttribute("aria-label", `切换到${targetLabel}资产列表`);
+    button.title = `切换到${targetLabel}资产列表`;
+    const label = button.querySelector("[data-watchlist-theme-label]");
+    if (label) label.textContent = targetLabel;
+  });
+  if (!persist) return;
+  window.LZWatchlistTheme?.set(theme);
+}
+
+function toggleWatchlistTheme() {
+  const current = document.documentElement.dataset.watchlistTheme === "light" ? "light" : "dark";
+  applyWatchlistTheme(current === "light" ? "dark" : "light", { persist: true });
+}
 
 function isAssetCodeQuery(category, value) {
   return Boolean(ASSET_CODE_PATTERNS[category]?.test(String(value || "").trim().toUpperCase()));
@@ -2650,6 +2670,11 @@ async function boot() {
 
 lockMobilePageZoom();
 document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-watchlist-theme-toggle]")) {
+    event.preventDefault();
+    toggleWatchlistTheme();
+    return;
+  }
   if (event.target.closest("#member-login-button")) {
     event.preventDefault();
     openMemberLogin();
@@ -2863,11 +2888,12 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.23", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.24", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
 }
 
+applyWatchlistTheme(document.documentElement.dataset.watchlistTheme);
 syncPageMode();
 boot().catch((error) => console.error(error)).finally(dismissAppSplash);
