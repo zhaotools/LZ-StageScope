@@ -23,7 +23,6 @@ const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
 const routes = new Set(["overview", "weekly", "daily", "dca", "fundamentals", "methodology"]);
 const mobileLayout = window.matchMedia("(max-width: 760px)");
-let forceInitialMobileWatchlist = mobileLayout.matches;
 const assets = {
   gold: {
     id: "gold",
@@ -43,7 +42,7 @@ const assets = {
   },
 };
 const state = {
-  assetId: "gold",
+  assetId: null,
   current: null,
   daily: null,
   weekly: null,
@@ -180,6 +179,7 @@ function loadAssetResource(assetId, resource) {
 }
 
 function routePath(route, assetId = state.assetId) {
+  if (!assetId) return watchlistPath();
   return `${SITE_BASE_PATH}/${assetId}/${route}`;
 }
 
@@ -208,10 +208,8 @@ function locationContext() {
   const forwardedPath = new URLSearchParams(location.search).get("route");
   const candidatePath = forwardedPath || location.pathname.slice(SITE_BASE_PATH.length);
   const parts = candidatePath.split("/").filter(Boolean);
-  const watchlist = forceInitialMobileWatchlist
-    || parts[0] === "watchlist"
-    || (!parts.length && mobileLayout.matches);
-  const assetId = assets[parts[0]] ? parts[0] : "gold";
+  const watchlist = parts[0] === "watchlist";
+  const assetId = assets[parts[0]] ? parts[0] : null;
   const pathRoute = parts[1];
   const legacyRoute = location.hash.split("/").filter(Boolean).at(-1);
   const route = pathRoute || legacyRoute || "overview";
@@ -222,28 +220,36 @@ function routeFromLocation() {
   return locationContext().route;
 }
 
-function normalizeRoute() {
+function normalizeRoute({ preferFirstAsset = false } = {}) {
   const context = locationContext();
   let { assetId, route, view } = context;
   const firstAssetId = firstAccessibleAssetId();
   if (!firstAssetId) {
+    state.loadToken += 1;
+    state.assetId = null;
+    state.current = null;
+    state.daily = null;
+    state.weekly = null;
+    state.dca = null;
+    state.fundamentals = null;
+    state.news = null;
+    state.routeLoads.clear();
+    clearCharts();
     state.watchlistView = mobileLayout.matches;
     const target = watchlistPath();
     if (location.pathname !== target || location.search || location.hash) {
       history.replaceState({ view: "watchlist" }, "", target);
     }
-    forceInitialMobileWatchlist = false;
     syncPageMode();
     updateRouteLinks();
     return null;
   }
-  if (view === "watchlist" && mobileLayout.matches) {
+  if (view === "watchlist" && mobileLayout.matches && !preferFirstAsset) {
     state.watchlistView = true;
     const target = watchlistPath();
     if (location.pathname !== target || location.search || location.hash) {
       history.replaceState({ view: "watchlist" }, "", target);
     }
-    forceInitialMobileWatchlist = false;
     syncPageMode();
     updateRouteLinks();
     return "overview";
@@ -2530,7 +2536,7 @@ async function handleMemberLogin(event) {
         await loadAsset(pendingAssetId, { historyMode: "push", targetRoute: pendingRoute });
       }
     } else {
-      const route = normalizeRoute();
+      const route = normalizeRoute({ preferFirstAsset: true });
       renderWatchlist();
       if (route && !state.watchlistView) await loadAsset(state.assetId, { historyMode: "replace", targetRoute: route });
     }
@@ -2606,7 +2612,7 @@ async function boot() {
   state.authReady = true;
   renderMemberControls();
   if (isMember()) await refreshMemberLibrary({ quiet: true });
-  const route = normalizeRoute();
+  const route = normalizeRoute({ preferFirstAsset: true });
   renderWatchlist();
   if (!route) return;
   if (state.watchlistView) {
@@ -2731,6 +2737,12 @@ document.addEventListener("click", (event) => {
   const link = event.target.closest("[data-route]");
   if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
+  if (!state.assetId) {
+    if (location.pathname !== watchlistPath()) history.replaceState({ view: "watchlist" }, "", watchlistPath());
+    syncPageMode();
+    renderWatchlist();
+    return;
+  }
   const route = routes.has(link.dataset.route) ? link.dataset.route : "overview";
   if (route === "dca" && !canUseDca()) {
     if (isMember()) window.alert("当前账号未开通定投指标。需要开通时请联系管理员。");
@@ -2833,7 +2845,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.18", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.19", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

@@ -10,9 +10,10 @@
     <script>
       const watchlist = /\/watchlist\/?$/.test(location.pathname);
       const match = location.pathname.match(/\/([a-z0-9-]+)\/(overview|weekly|daily|dca|fundamentals|methodology)\/?$/);
-      const asset = match ? match[1] : "gold";
-      const route = match ? match[2] : "overview";
-      location.replace("/LZ-StageScope/?route=" + encodeURIComponent(watchlist ? "/watchlist" : `/${asset}/${route}`));
+      const asset = match ? match[1] : null;
+      const route = match ? match[2] : null;
+      const target = watchlist || !asset || !route ? "/watchlist" : `/${asset}/${route}`;
+      location.replace("/LZ-StageScope/?route=" + encodeURIComponent(target));
     </script>
   </head>
   <body><a href="/LZ-StageScope/?route=%2Fwatchlist">返回 LZ-StageScope 观察列表</a></body>

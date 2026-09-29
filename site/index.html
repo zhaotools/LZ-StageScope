@@ -15,7 +15,7 @@
     <link rel="icon" href="/LZ-StageScope/icons/favicon-v4.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
     <link rel="shortcut icon" href="/LZ-StageScope/icons/favicon-v4.ico" type="image/x-icon">
     <link rel="icon" href="/LZ-StageScope/icons/favicon-32-v4.png" type="image/png" sizes="32x32">
-    <link rel="apple-touch-icon" href="/LZ-StageScope/icons/icon-180-v3.png">
+    <link rel="apple-touch-icon" href="/LZ-StageScope/icons/icon-180-v4.png">
     <link rel="mask-icon" href="/LZ-StageScope/icons/safari-pinned-tab.svg" color="#168eea">
     <style id="critical-splash">
       html,body{background:#082d43}
@@ -49,7 +49,7 @@
             <span><strong>我的趋势观察</strong><small>LZ-StageScope</small></span>
           </a>
           <div class="mobile-watchlist-utilities" aria-label="移动端工具">
-            <a href="./gold/methodology" data-route="methodology">框架与数据</a>
+            <a href="./watchlist" data-route="methodology">框架与数据</a>
             <button type="button" data-member-action><span>登录</span></button>
           </div>
         </div>
@@ -77,15 +77,15 @@
       <div class="application-content">
       <div class="mobile-detail-toolbar">
         <a href="./watchlist" data-watchlist-link aria-label="返回观察列表"><span aria-hidden="true">←</span> 观察列表</a>
-        <strong id="mobile-detail-title">黄金</strong>
+        <strong id="mobile-detail-title">资产信息</strong>
       </div>
       <div class="top-utility-bar shell" aria-label="页面工具">
-        <a class="top-brand" href="./gold/overview" data-route="overview" aria-label="LZ-StageScope 首页">
+        <a class="top-brand" href="./watchlist" data-route="overview" aria-label="LZ-StageScope 首页">
           <img src="./icons/brand-on-light-v2.png" alt="" width="37" height="26">
           <span><strong>我的趋势观察</strong><small>LZ-StageScope</small></span>
         </a>
         <div class="top-utility-actions">
-          <a class="top-method-link" href="./gold/methodology" data-route="methodology">框架与数据</a>
+          <a class="top-method-link" href="./watchlist" data-route="methodology">框架与数据</a>
           <div class="top-member-controls" aria-live="polite">
             <button class="top-member-login" id="member-login-button" type="button" disabled>检查登录…</button>
             <div class="top-member-account" id="member-account" hidden>
@@ -98,10 +98,10 @@
       <main id="main-content">
       <section class="asset-hero shell" aria-labelledby="asset-name">
         <div class="asset-heading">
-          <div class="asset-symbol" id="asset-symbol" aria-hidden="true">GOLD</div>
+          <div class="asset-symbol" id="asset-symbol" aria-hidden="true">—</div>
           <div>
-            <h1 id="asset-name">黄金</h1>
-            <p class="asset-benchmark" id="asset-benchmark">正在读取黄金基准</p>
+            <h1 id="asset-name">资产信息</h1>
+            <p class="asset-benchmark" id="asset-benchmark">正在读取资产信息</p>
           </div>
         </div>
         <div class="quote-block">
@@ -116,12 +116,12 @@
         </dl>
       </section>
 
-      <nav class="module-tabs shell" id="module-tabs" aria-label="黄金分析模块">
-        <a href="./gold/overview" data-route="overview">综合总览</a>
-        <a href="./gold/weekly" data-route="weekly">周线阶段</a>
-        <a href="./gold/daily" data-route="daily">日线状态</a>
-        <a href="./gold/dca" data-route="dca" hidden>定投指标</a>
-        <a href="./gold/fundamentals" data-route="fundamentals">基本面</a>
+      <nav class="module-tabs shell" id="module-tabs" aria-label="资产分析模块">
+        <a href="./watchlist" data-route="overview">综合总览</a>
+        <a href="./watchlist" data-route="weekly">周线阶段</a>
+        <a href="./watchlist" data-route="daily">日线状态</a>
+        <a href="./watchlist" data-route="dca" hidden>定投指标</a>
+        <a href="./watchlist" data-route="fundamentals">基本面</a>
       </nav>
 
       <div class="shell page-state" id="loading-state">
@@ -139,7 +139,7 @@
             <article class="overview-module overview-summary-module">
               <header class="snapshot-header">
                 <p class="eyebrow">ASSET SNAPSHOT</p>
-                <h2 id="overview-title">黄金状态总览</h2>
+                <h2 id="overview-title">资产状态总览</h2>
                 <p class="snapshot-headline" id="overview-headline">—</p>
               </header>
 
@@ -199,7 +199,7 @@
             <div class="stage-key" aria-label="周线阶段背景图例">
               <span class="s1">S1 低位整理</span><span class="s2">S2 上升趋势</span><span class="s3">S3 高位整理</span><span class="s4">S4 下降趋势</span>
             </div>
-            <div class="chart" id="weekly-chart" aria-label="黄金周线价格图"></div>
+            <div class="chart" id="weekly-chart" aria-label="资产周线价格图"></div>
           </article>
           <aside class="panel stat-panel" id="weekly-stats"></aside>
         </div>
@@ -226,7 +226,7 @@
             <div class="band-marker-key" aria-label="波动观察点图例">
               <span class="positive-marker">▲ 金叉</span><span class="uptrend-marker">● 上行趋势</span><span class="watch-marker">● 观察状态</span><span class="protection-marker">▼ 高位保护</span><span class="risk-marker">▼ 死叉与风险</span>
             </div>
-            <div class="chart" id="daily-chart" aria-label="黄金日线价格图"></div>
+            <div class="chart" id="daily-chart" aria-label="资产日线价格图"></div>
           </article>
           <div class="daily-side-stack">
             <aside class="panel stat-panel" id="daily-summary"></aside>
@@ -266,7 +266,7 @@
                 <div class="chart-legend" aria-label="定投图例"><span class="dca-line-key">LZ-DCA</span><span class="price-line-key">价格</span></div>
               </div>
             </div>
-            <div class="chart dca-chart" id="dca-chart" aria-label="黄金价格与 LZ-DCA 走势图"></div>
+            <div class="chart dca-chart" id="dca-chart" aria-label="资产价格与 LZ-DCA 走势图"></div>
           </article>
           <div class="dca-side-stack">
             <aside class="panel stat-panel dca-current-panel" id="dca-current"></aside>
@@ -323,15 +323,15 @@
 
       <footer class="site-footer shell">
       <span id="footer-label">LZ-StageScope · 我的趋势观察</span>
-      <a href="./gold/methodology" data-route="methodology">基于完成周期 · 查看框架与数据</a>
+      <a href="./watchlist" data-route="methodology">基于完成周期 · 查看框架与数据</a>
       </footer>
 
       <nav class="mobile-nav" aria-label="移动端导航">
-      <a href="./gold/overview" data-route="overview"><span>总览</span></a>
-      <a href="./gold/weekly" data-route="weekly"><span>周线</span></a>
-      <a href="./gold/daily" data-route="daily"><span>日线</span></a>
-      <a href="./gold/dca" data-route="dca" hidden><span>定投</span></a>
-      <a href="./gold/fundamentals" data-route="fundamentals"><span>基本面</span></a>
+      <a href="./watchlist" data-route="overview"><span>总览</span></a>
+      <a href="./watchlist" data-route="weekly"><span>周线</span></a>
+      <a href="./watchlist" data-route="daily"><span>日线</span></a>
+      <a href="./watchlist" data-route="dca" hidden><span>定投</span></a>
+      <a href="./watchlist" data-route="fundamentals"><span>基本面</span></a>
       </nav>
       </div>
     </div>
@@ -416,6 +416,6 @@
     </div>
 
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script type="module" src="./app.js?v=1.3.21"></script>
+    <script type="module" src="./app.js?v=1.3.22"></script>
   </body>
 </html>
