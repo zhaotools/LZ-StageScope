@@ -23,6 +23,7 @@ const SITE_ROOT = new URL("./", import.meta.url);
 const SITE_BASE_PATH = SITE_ROOT.pathname.replace(/\/$/, "");
 const routes = new Set(["overview", "weekly", "daily", "dca", "fundamentals", "methodology"]);
 const mobileLayout = window.matchMedia("(max-width: 760px)");
+const standaloneLayout = window.matchMedia("(display-mode: standalone)");
 const assets = {
   gold: {
     id: "gold",
@@ -220,7 +221,17 @@ function routeFromLocation() {
   return locationContext().route;
 }
 
-function normalizeRoute({ preferFirstAsset = false } = {}) {
+function isStandaloneApp() {
+  return standaloneLayout.matches || window.navigator.standalone === true;
+}
+
+function isRootEntry() {
+  const rootPath = location.pathname === SITE_ROOT.pathname || location.pathname === SITE_BASE_PATH;
+  const forwardedRoute = new URLSearchParams(location.search).has("route");
+  return rootPath && !forwardedRoute && !location.hash;
+}
+
+function normalizeRoute({ preferFirstAsset = false, preferWatchlist = false } = {}) {
   const context = locationContext();
   let { assetId, route, view } = context;
   const firstAssetId = firstAccessibleAssetId();
@@ -244,11 +255,12 @@ function normalizeRoute({ preferFirstAsset = false } = {}) {
     updateRouteLinks();
     return null;
   }
-  if (view === "watchlist" && mobileLayout.matches && !preferFirstAsset) {
+  if (mobileLayout.matches && (preferWatchlist || (view === "watchlist" && !preferFirstAsset))) {
+    state.assetId = canAccessAsset(state.assetId) ? state.assetId : firstAssetId;
     state.watchlistView = true;
     const target = watchlistPath();
     if (location.pathname !== target || location.search || location.hash) {
-      history.replaceState({ view: "watchlist" }, "", target);
+      history.replaceState({ view: "watchlist", assetId: state.assetId }, "", target);
     }
     syncPageMode();
     updateRouteLinks();
@@ -2612,7 +2624,12 @@ async function boot() {
   state.authReady = true;
   renderMemberControls();
   if (isMember()) await refreshMemberLibrary({ quiet: true });
-  const route = normalizeRoute({ preferFirstAsset: true });
+  const launchInWatchlist = mobileLayout.matches && isStandaloneApp()
+    && (isRootEntry() || locationContext().view === "watchlist");
+  const route = normalizeRoute({
+    preferFirstAsset: !launchInWatchlist,
+    preferWatchlist: launchInWatchlist,
+  });
   renderWatchlist();
   if (!route) return;
   if (state.watchlistView) {
@@ -2845,7 +2862,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.19", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.20", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
