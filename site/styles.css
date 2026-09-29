@@ -98,7 +98,7 @@ button { font: inherit; }
 .mobile-watchlist-topbar,
 .mobile-detail-toolbar { display: none; }
 .mobile-watchlist-brand { display: flex; min-width: 0; align-items: center; gap: 9px; }
-.mobile-watchlist-brand img { flex: 0 0 auto; border-radius: 11px; }
+.mobile-watchlist-brand img { width: 55px; height: 38px; object-fit: contain; flex: 0 0 auto; }
 .mobile-watchlist-brand span { min-width: 0; }
 .mobile-watchlist-brand strong,
 .mobile-watchlist-brand small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -315,7 +315,7 @@ body.watchlist-dragging { cursor: grabbing; }
   gap: 9px;
   margin-right: 12px;
 }
-.top-brand img { width: 38px; height: 38px; flex: 0 0 auto; border-radius: 11px; box-shadow: var(--shadow-sm); }
+.top-brand img { width: 37px; height: 26px; object-fit: contain; flex: 0 0 auto; }
 .top-brand span { min-width: 0; }
 .top-brand strong,
 .top-brand small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1541,7 +1541,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
     box-shadow: none;
   }
   .mobile-watchlist-topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 24px; }
-  .mobile-watchlist-brand img { width: 38px; height: 38px; }
+  .mobile-watchlist-brand img { width: 55px; height: 38px; }
   .watchlist-view .watchlist-heading { margin: 0; padding: 0 2px 12px; }
   .watchlist-view .watchlist-heading span { font-size: 10px; }
   .watchlist-view .watchlist-heading strong { font-size: 19px; }
@@ -1609,7 +1609,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .top-utility-bar { gap: 5px; overflow-x: auto; scrollbar-width: none; }
   .top-utility-bar::-webkit-scrollbar { display: none; }
   .top-brand { flex: 0 0 auto; gap: 6px; margin-right: 5px; }
-  .top-brand img { width: 34px; height: 34px; }
+  .top-brand img { width: 34px; height: 24px; }
   .top-brand small { display: none; }
   .top-utility-actions { gap: 5px; }
   .top-member-login,

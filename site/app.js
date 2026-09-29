@@ -2833,7 +2833,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.17", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.18", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

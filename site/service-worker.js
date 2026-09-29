@@ -1,20 +1,21 @@
-const CACHE = "lz-stagescope-v1.3.23";
+const CACHE = "lz-stagescope-v1.3.24";
 const SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.3.13",
-  "./app.js?v=1.3.20",
+  "./styles.css?v=1.3.14",
+  "./app.js?v=1.3.21",
   "./member-auth.js?v=1.1.4",
   "./member-config.js?v=1.0.19",
   "./manifest.webmanifest",
   "./favicon.ico",
-  "./icons/favicon-v3.ico",
-  "./icons/favicon-32-v3.png",
+  "./icons/favicon-v4.ico",
+  "./icons/favicon-32-v4.png",
   "./icons/safari-pinned-tab.svg",
-  "./icons/icon-180.png",
-  "./icons/icon-192.png?v=1.1.0",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+  "./icons/brand-on-dark-v2.png",
+  "./icons/brand-on-light-v2.png",
+  "./icons/icon-180-v2.png",
+  "./icons/icon-192-v2.png",
+  "./icons/icon-512-v2.png",
 ];
 
 self.addEventListener("install", (event) => {
