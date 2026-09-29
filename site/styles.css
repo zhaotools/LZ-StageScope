@@ -434,6 +434,29 @@ body.member-dialog-open { overflow: hidden; }
 .member-dialog-logout { width: 100%; color: var(--red); border: 1px solid #ecc4c4; background: var(--red-soft); }
 .member-dialog-logout:hover { background: #f7dede; }
 
+.member-dialog-panel.member-account-mode { width: min(640px, 100%); padding: 20px 22px; }
+.member-account-mode .member-dialog-close { top: 12px; right: 12px; width: 30px; height: 30px; }
+.member-account-mode .member-dialog-icon { width: 38px; height: 38px; margin-bottom: 7px; border-radius: 11px; font-size: 10px; }
+.member-account-mode .member-dialog-kicker { font-size: 8px; }
+.member-account-mode h2 { margin: 4px 0 7px; font-size: 22px; line-height: 1.15; }
+.member-account-mode .member-account-summary { display: flex; gap: 10px; min-height: 38px; margin: 0; padding: 8px 12px; align-items: center; justify-content: space-between; }
+.member-account-mode .member-account-summary strong { min-width: 0; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.member-account-mode .member-account-summary span { flex: 0 0 auto; font-size: 9px; }
+.member-account-mode .member-account-settings { gap: 9px; margin: 9px 0; }
+.member-account-mode .member-account-settings form { grid-template-columns: 76px minmax(0, 1fr); gap: 7px 10px; padding: 11px 12px; border-radius: 11px; }
+.member-account-mode .account-form-heading { grid-column: 1 / -1; display: flex; gap: 10px; margin-bottom: 1px; align-items: baseline; justify-content: space-between; }
+.member-account-mode .account-form-heading strong { font-size: 11px; }
+.member-account-mode .account-form-heading span { font-size: 8px; text-align: right; }
+.member-account-mode form > label { margin: 0; align-self: center; font-size: 9px; }
+.member-account-mode form > input { height: 36px; border-radius: 9px; font-size: 11px; }
+.member-account-mode .account-turnstile,
+.member-account-mode .account-feedback,
+.member-account-mode .account-save-button { grid-column: 2; }
+.member-account-mode .account-turnstile { margin-top: 0; }
+.member-account-mode .account-feedback { padding: 6px 8px; font-size: 9px; }
+.member-account-mode .account-save-button,
+.member-account-mode .member-dialog-logout { min-height: 36px; border-radius: 9px; font-size: 10px; }
+
 .site-header {
   position: sticky;
   top: 0;
