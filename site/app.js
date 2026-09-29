@@ -62,6 +62,7 @@ const state = {
   assetSearchBusy: false,
   assetPollTimer: null,
   watchlistSorting: false,
+  watchlistCategory: "all",
   watchlistOrderBeforeEdit: [],
   watchlistOrderSaving: false,
   watchlistView: false,
@@ -86,6 +87,7 @@ const ASSET_CODE_PATTERNS = {
   crypto: /^[A-Z0-9]{2,20}(?:[-/](?:USD|USDT|USDC))?$/,
   commodity: /^[A-Z]{1,12}(?:=F)?$/,
 };
+const WATCHLIST_CATEGORIES = new Set(["all", "us_equity", "cn_equity", "hk_equity", "crypto", "commodity"]);
 
 function isAssetCodeQuery(category, value) {
   return Boolean(ASSET_CODE_PATTERNS[category]?.test(String(value || "").trim().toUpperCase()));
@@ -432,21 +434,30 @@ function renderAssetSearchResults() {
 
 function renderWatchlist() {
   const watchlist = readWatchlist();
+  const visibleWatchlist = state.watchlistCategory === "all"
+    ? watchlist
+    : watchlist.filter((assetId) => assets[assetId]?.category === state.watchlistCategory);
   const member = isMember();
   const addButton = $("#add-asset-button");
   const sortButton = $("#watchlist-sort-button");
+  const categoryFilter = $("#watchlist-category-filter");
   const watchlistNode = $("#asset-watchlist");
+  categoryFilter.value = state.watchlistCategory;
+  categoryFilter.disabled = !watchlist.length || state.watchlistSorting;
   addButton.hidden = !member;
   addButton.disabled = member && (watchlist.length >= 30 || state.watchlistSorting);
   addButton.title = state.watchlistSorting
     ? "请先完成资产排序"
     : watchlist.length >= 30 ? "个人资产已达到 30 个上限" : "新增资产";
   sortButton.hidden = !member;
-  sortButton.disabled = state.watchlistOrderSaving || (!state.watchlistSorting && watchlist.length < 2);
+  sortButton.disabled = state.watchlistOrderSaving
+    || (!state.watchlistSorting && (watchlist.length < 2 || state.watchlistCategory !== "all"));
   sortButton.classList.toggle("active", state.watchlistSorting);
   sortButton.setAttribute("aria-pressed", String(state.watchlistSorting));
   sortButton.setAttribute("aria-label", state.watchlistSorting ? "完成资产排序" : "调整资产顺序");
-  sortButton.title = state.watchlistSorting ? "完成并保存排序" : "调整资产顺序";
+  sortButton.title = state.watchlistSorting
+    ? "完成并保存排序"
+    : state.watchlistCategory !== "all" ? "请先切换到“自选”后调整顺序" : "调整资产顺序";
   sortButton.querySelector("span").textContent = state.watchlistOrderSaving ? "…" : state.watchlistSorting ? "✓" : "⇅";
   $("#asset-count").textContent = `${watchlist.length} / 30`;
   watchlistNode.classList.toggle("sorting", state.watchlistSorting);
@@ -456,7 +467,12 @@ function renderWatchlist() {
     renderAssetSearchResults();
     return;
   }
-  watchlistNode.innerHTML = watchlist.map((assetId) => {
+  if (!visibleWatchlist.length) {
+    watchlistNode.innerHTML = '<p class="watchlist-empty">当前分类暂无自选资产。</p>';
+    renderAssetSearchResults();
+    return;
+  }
+  watchlistNode.innerHTML = visibleWatchlist.map((assetId) => {
     const asset = assets[assetId];
     if (!asset) return "";
     const row = memberAssetRow(assetId);
@@ -568,7 +584,7 @@ function handleWatchlistKeydown(event) {
 }
 
 async function toggleWatchlistSorting() {
-  if (!isMember() || state.watchlistOrderSaving) return;
+  if (!isMember() || state.watchlistOrderSaving || state.watchlistCategory !== "all") return;
   if (!state.watchlistSorting) {
     state.watchlistOrderBeforeEdit = readWatchlist();
     state.watchlistSorting = true;
@@ -2466,6 +2482,7 @@ async function resetMemberUiAfterSessionEnd() {
   state.assetSummaries = new Map();
   state.memberJobs = [];
   state.watchlistSorting = false;
+  state.watchlistCategory = "all";
   state.watchlistOrderBeforeEdit = [];
   state.watchlistOrderSaving = false;
   if (state.assetPollTimer) window.clearTimeout(state.assetPollTimer);
@@ -2788,6 +2805,11 @@ $("#member-display-name-form").addEventListener("submit", handleDisplayNameUpdat
 $("#member-password-form").addEventListener("submit", handlePasswordUpdate);
 $("#member-password-form").addEventListener("input", syncAccountPasswordSubmit);
 $("#asset-search-form").addEventListener("submit", handleAssetSearch);
+$("#watchlist-category-filter").addEventListener("change", (event) => {
+  const category = String(event.target.value || "all");
+  state.watchlistCategory = WATCHLIST_CATEGORIES.has(category) ? category : "all";
+  renderWatchlist();
+});
 $("#asset-watchlist").addEventListener("pointerdown", handleWatchlistPointerDown);
 $("#asset-watchlist").addEventListener("pointermove", handleWatchlistPointerMove);
 $("#asset-watchlist").addEventListener("pointerup", handleWatchlistPointerUp);

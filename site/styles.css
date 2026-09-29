@@ -124,6 +124,41 @@ button { font: inherit; }
 .watchlist-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 0; padding: 0 3px 10px; }
 .watchlist-heading span { display: block; color: rgba(255, 255, 255, 0.38); font-size: 9px; font-weight: 800; letter-spacing: 0.16em; }
 .watchlist-heading strong { display: block; margin-top: 3px; color: rgba(255, 255, 255, 0.86); font-size: 13px; }
+.watchlist-category-control {
+  position: relative;
+  width: 76px;
+  height: 28px;
+}
+.watchlist-category-control::after {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+  content: "▼";
+  transform: translateY(-48%);
+}
+.watchlist-category-control select {
+  width: 100%;
+  height: 100%;
+  padding: 0 23px 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9px;
+  outline: none;
+  color: white;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.08);
+  font: 700 11px/1 var(--font-ui);
+  cursor: pointer;
+}
+.watchlist-category-control select:hover,
+.watchlist-category-control select:focus-visible { border-color: rgba(255, 255, 255, 0.42); background: rgba(255, 255, 255, 0.14); }
+.watchlist-category-control select:focus-visible { box-shadow: 0 0 0 2px rgba(201, 154, 59, 0.38); }
+.watchlist-category-control select:disabled { opacity: 0.42; cursor: default; }
+.watchlist-category-control:has(select:disabled)::after { opacity: 0.42; }
+.watchlist-category-control option { color: var(--ink); background: white; }
 .asset-add-button,
 .watchlist-sort-button {
   display: grid;
@@ -1510,6 +1545,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .watchlist-view .watchlist-heading { margin: 0; padding: 0 2px 12px; }
   .watchlist-view .watchlist-heading span { font-size: 10px; }
   .watchlist-view .watchlist-heading strong { font-size: 19px; }
+  .watchlist-category-control { height: 34px; }
   .asset-add-button,
   .watchlist-sort-button { width: 34px; height: 34px; }
   .watchlist-view .watchlist-table-header {

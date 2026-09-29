@@ -1,9 +1,9 @@
-const CACHE = "lz-stagescope-v1.3.22";
+const CACHE = "lz-stagescope-v1.3.23";
 const SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.3.12",
-  "./app.js?v=1.3.19",
+  "./styles.css?v=1.3.13",
+  "./app.js?v=1.3.20",
   "./member-auth.js?v=1.1.4",
   "./member-config.js?v=1.0.19",
   "./manifest.webmanifest",
