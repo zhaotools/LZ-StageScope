@@ -184,10 +184,7 @@ html[data-watchlist-theme="light"] .theme-icon-moon { display: block; }
 .watchlist-sort-button:hover { border-color: rgba(255, 255, 255, 0.42); background: rgba(255, 255, 255, 0.14); }
 .asset-add-button:disabled,
 .watchlist-sort-button:disabled { opacity: 0.42; cursor: default; }
-.watchlist-sort-button { font-size: 16px; font-weight: 850; }
 .watchlist-sort-button > span { color: inherit; font-size: inherit; font-weight: inherit; letter-spacing: 0; line-height: 1; }
-.watchlist-sort-button.active { color: white; border-color: #c99a3b; background: rgba(255, 255, 255, 0.08); }
-.watchlist-sort-button.active:hover { border-color: #d8ad58; background: rgba(255, 255, 255, 0.14); }
 .watchlist-mobile-actions { display: flex; align-items: center; gap: 6px; }
 .watchlist-table-header {
   display: grid;
@@ -1854,11 +1851,6 @@ html[data-watchlist-theme="light"] .watchlist-sort-button:hover {
   color: #082d43;
   border-color: #7da6bc;
   background: rgba(255, 255, 255, 0.94);
-}
-html[data-watchlist-theme="light"] .watchlist-sort-button.active {
-  color: #8d611a;
-  border-color: #b98936;
-  background: #fff8e9;
 }
 html[data-watchlist-theme="light"] .watchlist-table-header {
   color: #657b8a;
