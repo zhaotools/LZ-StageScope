@@ -1397,7 +1397,7 @@ function renderWeekly() {
       <div><dt>MA30趋势</dt><dd class="weekly-ma30-trend ${ma30TrendClass}">${esc(ma30Direction)}<span>｜5周斜率 ${esc(ma30Slope)}</span></dd></div>
       <div><dt>阶段置信度</dt><dd>${fmt(current.confidence, 0)}%</dd></div>
     </dl>
-    <div class="metric-track" aria-label="阶段置信度 ${fmt(current.confidence, 0)}%"><span style="--metric: ${metricPercent(current.confidence)}%"></span></div>
+    <div class="metric-track" aria-label="阶段置信度 ${fmt(current.confidence, 0)}%"><span style="width: ${metricPercent(current.confidence)}%"></span></div>
     <p class="explanation">${esc(explanation)}</p>
   `;
   $("#weekly-evidence").innerHTML = (current.evidence || []).map((item) => `
@@ -2241,11 +2241,11 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
   }
   const candle = api.addCandle({ upColor: "#16835d", downColor: "#c94f55", borderVisible: false, wickUpColor: "#16835d", wickDownColor: "#c94f55" });
   candle.setData(series.map((bar) => ({ time: bar.date || bar.time, open: bar.open, high: bar.high, low: bar.low, close: bar.close })));
-  movingAverages.forEach(([key, color, title]) => {
+  movingAverages.forEach(([key, color, title, lineWidth = 2]) => {
     const showLabel = options.movingAverageLabels !== false;
     const line = api.addLine({
       color,
-      lineWidth: 2,
+      lineWidth,
       title: showLabel ? title : "",
       priceLineVisible: false,
       lastValueVisible: showLabel,
@@ -2353,7 +2353,7 @@ function renderWeeklyChart() {
   renderPriceChart(
     "weekly-chart",
     completedSeries,
-    [["ma30", "#2478a5", "MA30"]],
+    [["ma10", "#c98632", "MA10", 1], ["ma30", "#2478a5", "MA30", 2]],
     "weekly",
     { stageBackground: true, stageTransitions: state.weekly?.stageHistory, movingAverageLabels: false, fitAllSeries: true, limitZoomToData: true },
   );
@@ -2947,7 +2947,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.31", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.32", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
