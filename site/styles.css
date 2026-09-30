@@ -906,7 +906,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   border-radius: 14px;
   background: var(--surface);
 }
-.chart > :not(.stage-background-layer):not(.stage-label-layer):not(.stage-transition-layer):not(.band-history-marker-layer):not(.stoch-rsi-label):not(.dca-background-layer):not(.dca-guide-label-layer):not(.dca-signal-tooltip-layer) { position: relative; z-index: 1; }
+.chart > :not(.stage-background-layer):not(.stage-label-layer):not(.stage-transition-layer):not(.band-history-marker-layer):not(.stoch-rsi-panel):not(.dca-background-layer):not(.dca-guide-label-layer):not(.dca-signal-tooltip-layer) { position: relative; z-index: 1; }
 .stage-background-layer, .stage-label-layer, .stage-transition-layer, .band-history-marker-layer {
   position: absolute;
   inset: 0;
@@ -1137,35 +1137,74 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .band-history-marker:hover .band-history-marker-tooltip,
 .band-history-marker:focus .band-history-marker-tooltip,
 .band-history-marker:focus-within .band-history-marker-tooltip { opacity: 1; visibility: visible; }
-.stoch-rsi-label {
+.stoch-rsi-panel {
   position: absolute;
   top: 73%;
   right: 0;
-  left: 10px;
-  z-index: 3;
+  bottom: 26px;
+  left: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-top: 1px solid rgba(17, 42, 67, 0.14);
+  background: var(--surface);
+  pointer-events: none;
+}
+.stoch-rsi-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.stoch-rsi-label {
+  position: absolute;
+  top: 5px;
+  left: 9px;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 7px;
-  padding-top: 6px;
   color: var(--muted);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
-.stoch-rsi-label::before {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: rgba(17, 42, 67, 0.12);
-  content: "";
 }
 .stoch-rsi-label strong { color: var(--ink); letter-spacing: 0.04em; }
 .stoch-rsi-label span { font-weight: 800; }
 .stoch-rsi-label .k-line { color: var(--blue); }
 .stoch-rsi-label .d-line { color: var(--orange); }
-.stoch-rsi-label small { color: var(--muted); font-size: inherit; }
+.stoch-rsi-zone.overbought { fill: rgba(201, 79, 85, 0.055); }
+.stoch-rsi-zone.oversold { fill: rgba(36, 120, 165, 0.055); }
+.stoch-rsi-guide {
+  stroke: rgba(101, 119, 138, 0.34);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.stoch-rsi-guide.value-50 { stroke: rgba(101, 119, 138, 0.2); }
+.stoch-rsi-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.stoch-rsi-line.k-line { stroke: var(--blue); }
+.stoch-rsi-line.d-line { stroke: var(--orange); }
+.stoch-rsi-axis-border { stroke: rgba(17, 42, 67, 0.14); stroke-width: 1; }
+.stoch-rsi-axis-value {
+  fill: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.stoch-rsi-axis-value.value-80 { fill: var(--red); }
+.stoch-rsi-axis-value.value-20 { fill: var(--blue); }
+.stoch-rsi-zone-name {
+  font-family: var(--font-ui);
+  font-size: 8px;
+  font-weight: 700;
+}
+.stoch-rsi-zone-name.overbought { fill: rgba(201, 79, 85, 0.78); }
+.stoch-rsi-zone-name.oversold { fill: rgba(36, 120, 165, 0.78); }
 .stat-panel {
   display: flex;
   flex-direction: column;

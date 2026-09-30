@@ -2134,39 +2134,98 @@ function installBandHistoryMarkers(container, chart, candle, series, history) {
   return redraw;
 }
 
-function installStochRsi(container, chart, addLine, series) {
-  const common = {
-    priceScaleId: "stoch-rsi",
-    lineWidth: 2,
-    priceLineVisible: false,
-    lastValueVisible: false,
-    crosshairMarkerVisible: true,
-    priceFormat: { type: "price", precision: 1, minMove: 0.1 },
+function installStochRsi(container, chart, series) {
+  const panel = document.createElement("div");
+  panel.className = "stoch-rsi-panel";
+  panel.innerHTML = `
+    <div class="stoch-rsi-label"><strong>STOCH RSI</strong><span class="k-line">K</span><span class="d-line">D</span></div>
+    <svg class="stoch-rsi-canvas" role="img" aria-label="Stoch RSI 独立坐标轴，范围 0 到 100">
+      <rect class="stoch-rsi-zone overbought" data-zone="overbought"></rect>
+      <rect class="stoch-rsi-zone oversold" data-zone="oversold"></rect>
+      <g class="stoch-rsi-guides"></g>
+      <path class="stoch-rsi-line k-line" vector-effect="non-scaling-stroke"></path>
+      <path class="stoch-rsi-line d-line" vector-effect="non-scaling-stroke"></path>
+      <line class="stoch-rsi-axis-border" vector-effect="non-scaling-stroke"></line>
+      <g class="stoch-rsi-axis-values"></g>
+      <text class="stoch-rsi-zone-name overbought">超买区</text>
+      <text class="stoch-rsi-zone-name oversold">超卖区</text>
+    </svg>
+  `;
+  container.append(panel);
+
+  const svg = panel.querySelector(".stoch-rsi-canvas");
+  const kPath = panel.querySelector(".stoch-rsi-line.k-line");
+  const dPath = panel.querySelector(".stoch-rsi-line.d-line");
+  const guides = panel.querySelector(".stoch-rsi-guides");
+  const axisValues = panel.querySelector(".stoch-rsi-axis-values");
+  const axisBorder = panel.querySelector(".stoch-rsi-axis-border");
+  const overboughtZone = panel.querySelector('[data-zone="overbought"]');
+  const oversoldZone = panel.querySelector('[data-zone="oversold"]');
+  const overboughtName = panel.querySelector(".stoch-rsi-zone-name.overbought");
+  const oversoldName = panel.querySelector(".stoch-rsi-zone-name.oversold");
+  const svgNode = (name, attributes = {}) => {
+    const node = document.createElementNS("http://www.w3.org/2000/svg", name);
+    Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, String(value)));
+    return node;
   };
-  const kLine = addLine({ ...common, color: "#2478a5", title: "" });
-  const dLine = addLine({ ...common, color: "#c98632", title: "" });
-  kLine.setData(series.flatMap((bar) => Number.isFinite(Number(bar.stochK)) ? [{ time: bar.date || bar.time, value: Number(bar.stochK) }] : []));
-  dLine.setData(series.flatMap((bar) => Number.isFinite(Number(bar.stochD)) ? [{ time: bar.date || bar.time, value: Number(bar.stochD) }] : []));
-  kLine.applyOptions({ title: "", priceLineVisible: false, lastValueVisible: false });
-  dLine.applyOptions({ title: "", priceLineVisible: false, lastValueVisible: false });
-  chart.priceScale("stoch-rsi").applyOptions({
-    autoScale: true,
-    visible: false,
-    scaleMargins: { top: 0.76, bottom: 0.05 },
-  });
-  for (const value of [20, 80]) {
-    kLine.createPriceLine({
-      price: value,
-      color: "rgba(101,119,138,.36)",
-      lineWidth: 1,
-      lineStyle: 2,
-      axisLabelVisible: false,
-    });
-  }
-  const label = document.createElement("div");
-  label.className = "stoch-rsi-label";
-  label.innerHTML = '<strong>STOCH RSI</strong><span class="k-line">K</span><span class="d-line">D</span><small>80 / 20</small>';
-  container.append(label);
+  const yForValue = (value, height) => ((100 - Math.max(0, Math.min(100, Number(value)))) / 100) * height;
+  const pathFor = (key, height, plotWidth) => {
+    let path = "";
+    for (const bar of series) {
+      const value = Number(bar[key]);
+      const x = chart.timeScale().timeToCoordinate(bar.date || bar.time);
+      if (!Number.isFinite(value) || !Number.isFinite(x) || x < -2 || x > plotWidth + 2) continue;
+      path += `${path ? " L" : "M"}${x.toFixed(2)} ${yForValue(value, height).toFixed(2)}`;
+    }
+    return path;
+  };
+  const redraw = () => {
+    const width = panel.clientWidth;
+    const height = panel.clientHeight;
+    if (!width || !height) return;
+    const axisWidth = Math.max(54, Math.ceil(Number(chart.priceScale("right").width?.()) || 68));
+    const plotWidth = Math.max(1, width - axisWidth);
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    overboughtZone.setAttribute("x", "0");
+    overboughtZone.setAttribute("y", "0");
+    overboughtZone.setAttribute("width", String(plotWidth));
+    overboughtZone.setAttribute("height", String(yForValue(80, height)));
+    oversoldZone.setAttribute("x", "0");
+    oversoldZone.setAttribute("y", String(yForValue(20, height)));
+    oversoldZone.setAttribute("width", String(plotWidth));
+    oversoldZone.setAttribute("height", String(height - yForValue(20, height)));
+    guides.replaceChildren(...[80, 50, 20].map((value) => svgNode("line", {
+      class: `stoch-rsi-guide value-${value}`,
+      x1: 0,
+      x2: plotWidth,
+      y1: yForValue(value, height),
+      y2: yForValue(value, height),
+      "vector-effect": "non-scaling-stroke",
+    })));
+    axisValues.replaceChildren(...[80, 50, 20].map((value) => {
+      const text = svgNode("text", {
+        class: `stoch-rsi-axis-value value-${value}`,
+        x: plotWidth + 9,
+        y: yForValue(value, height),
+        "dominant-baseline": "middle",
+      });
+      text.textContent = String(value);
+      return text;
+    }));
+    axisBorder.setAttribute("x1", String(plotWidth));
+    axisBorder.setAttribute("x2", String(plotWidth));
+    axisBorder.setAttribute("y1", "0");
+    axisBorder.setAttribute("y2", String(height));
+    overboughtName.setAttribute("x", "8");
+    overboughtName.setAttribute("y", String(Math.max(10, yForValue(90, height))));
+    oversoldName.setAttribute("x", "8");
+    oversoldName.setAttribute("y", String(Math.min(height - 3, yForValue(8, height))));
+    kPath.setAttribute("d", pathFor("stochK", height, plotWidth));
+    dPath.setAttribute("d", pathFor("stochD", height, plotWidth));
+  };
+  chart.timeScale().subscribeVisibleLogicalRangeChange?.(redraw);
+  requestAnimationFrame(redraw);
+  return redraw;
 }
 
 function renderPriceChart(id, series, movingAverages, kind, options = {}) {
@@ -2194,7 +2253,7 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
     line.setData(series.flatMap((bar) => Number.isFinite(Number(bar[key])) ? [{ time: bar.date || bar.time, value: Number(bar[key]) }] : []));
     if (!showLabel) line.applyOptions({ title: "", priceLineVisible: false, lastValueVisible: false });
   });
-  if (options.stochRsi) installStochRsi(container, api.chart, api.addLine, series);
+  const redrawStochRsi = options.stochRsi ? installStochRsi(container, api.chart, series) : null;
   const applyRequestedVisibleRange = () => {
     if (options.fitAllSeries) {
       api.chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: series.length - 0.5 });
@@ -2227,6 +2286,7 @@ function renderPriceChart(id, series, movingAverages, kind, options = {}) {
     ? installDataZoomBoundary(container, api.chart, series.length)
     : () => {};
   const decorationRedraws = [];
+  if (redrawStochRsi) decorationRedraws.push(redrawStochRsi);
   if (options.stageBackground) decorationRedraws.push(installStageBackground(container, api.chart, series));
   if (options.stageTransitions?.length) {
     decorationRedraws.push(installStageTransitions(container, api.chart, candle, series, options.stageTransitions));
@@ -2887,7 +2947,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.29", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.30", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
