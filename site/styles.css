@@ -801,7 +801,8 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 
 .content-grid { display: grid; gap: 17px; }
 .detail-grid { grid-template-columns: minmax(0, 1.62fr) minmax(280px, 0.78fr); }
-.weekly-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(250px, 0.82fr); }
+.weekly-detail-grid,
+.daily-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(250px, 0.82fr); }
 .dca-detail-grid { grid-template-columns: minmax(0, 3fr) minmax(270px, 0.9fr); align-items: stretch; }
 .dca-chart-panel { display: flex; flex-direction: column; }
 .dca-chart-panel .dca-chart { flex: 1 1 auto; height: auto; min-height: 470px; }
@@ -1594,6 +1595,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   .validation-strip { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .weekly-detail-grid { grid-template-columns: 1fr; }
+  .daily-detail-grid { grid-template-columns: 1fr; }
   .dca-detail-grid { grid-template-columns: 1fr; }
   .dca-chart-panel .dca-chart { flex: none; height: 420px; min-height: 420px; }
   .daily-side-stack { gap: 12px; }
