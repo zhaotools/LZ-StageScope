@@ -868,6 +868,8 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   font-weight: 700;
 }
 .chart-legend span::before { width: 15px; height: 2px; border-radius: 999px; content: ""; background: currentColor; }
+.chart-legend .ma10 { color: #c98632; }
+.chart-legend .ma10::before { height: 1px; }
 .chart-legend .ma20 { color: var(--gold); }
 .chart-legend .ma30, .chart-legend .ma50 { color: var(--blue); }
 .chart-legend .ma200 { color: var(--purple); }
@@ -1306,7 +1308,8 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 }
 .metric-track span {
   display: block;
-  width: var(--metric);
+  width: 0;
+  max-width: 100%;
   height: 100%;
   border-radius: inherit;
   background: var(--blue);
