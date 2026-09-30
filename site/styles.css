@@ -1960,7 +1960,7 @@ html[data-watchlist-theme="light"] .watchlist-remove {
 
 @media (min-width: 761px) {
   html[data-watchlist-theme="light"] .asset-sidebar {
-    background: #e8edf1;
+    background: #f4f7fa;
     box-shadow: 10px 0 32px rgba(31, 48, 61, 0.09);
   }
   html[data-watchlist-theme="light"] .watchlist-asset {
