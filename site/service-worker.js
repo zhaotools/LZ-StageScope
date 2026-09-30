@@ -1,10 +1,10 @@
-const CACHE = "lz-trendscope-v1.3.40";
+const CACHE = "lz-trendscope-v1.3.41";
 const SHELL = [
   "./",
   "./index.html",
   "./theme-init.js?v=1.0.1",
-  "./styles.css?v=1.3.26",
-  "./app.js?v=1.3.36",
+  "./styles.css?v=1.3.27",
+  "./app.js?v=1.3.37",
   "./member-auth.js?v=1.1.4",
   "./member-config.js?v=1.0.19",
   "./manifest.webmanifest",
