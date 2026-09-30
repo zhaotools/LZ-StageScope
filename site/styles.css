@@ -1172,7 +1172,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
 .stoch-rsi-label strong { color: var(--ink); letter-spacing: 0.04em; }
 .stoch-rsi-label span { font-weight: 800; }
 .stoch-rsi-label .k-line { color: var(--blue); }
-.stoch-rsi-label .d-line { color: var(--orange); }
+.stoch-rsi-label .d-line { color: var(--orange, #c98632); }
 .stoch-rsi-zone.overbought { fill: rgba(201, 79, 85, 0.055); }
 .stoch-rsi-zone.oversold { fill: rgba(36, 120, 165, 0.055); }
 .stoch-rsi-guide {
@@ -1188,7 +1188,7 @@ body.methodology-view [data-panel="methodology"] { min-height: 100vh; padding-to
   stroke-linejoin: round;
 }
 .stoch-rsi-line.k-line { stroke: var(--blue); }
-.stoch-rsi-line.d-line { stroke: var(--orange); }
+.stoch-rsi-line.d-line { stroke: var(--orange, #c98632); }
 .stoch-rsi-axis-border { stroke: rgba(17, 42, 67, 0.14); stroke-width: 1; }
 .stoch-rsi-axis-value {
   fill: var(--muted);
