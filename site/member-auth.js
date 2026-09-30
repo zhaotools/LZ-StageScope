@@ -16,7 +16,7 @@ function sessionStorage() {
 
 function requireMemberConfig() {
   if (!MEMBER_CONFIG.supabaseUrl || !MEMBER_CONFIG.publishableKey) {
-    throw new MemberAuthError("StageScope 会员服务尚未完成独立配置", "member_not_configured");
+    throw new MemberAuthError("TrendScope 会员服务尚未完成独立配置", "member_not_configured");
   }
 }
 
@@ -511,7 +511,7 @@ export async function signOutMember() {
 }
 
 export function memberErrorMessage(error) {
-  if (error?.code === "member_not_configured") return "StageScope 会员服务尚未完成独立配置。";
+  if (error?.code === "member_not_configured") return "TrendScope 会员服务尚未完成独立配置。";
   if (error?.code === "inactive_profile" || error?.code === "profile_not_found") {
     return "会员账号尚未激活、已暂停或已到期，请联系管理员。";
   }

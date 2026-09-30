@@ -1,8 +1,13 @@
 (() => {
-  const storageKey = "lz-stagescope-watchlist-theme:v1";
+  const storageKey = "lz-trendscope-watchlist-theme:v1";
+  const legacyStorageKey = "lz-stagescope-watchlist-theme:v1";
   let theme = "dark";
   try {
-    theme = window.localStorage.getItem(storageKey) === "light" ? "light" : "dark";
+    const storedTheme = window.localStorage.getItem(storageKey)
+      ?? window.localStorage.getItem(legacyStorageKey);
+    theme = storedTheme === "light" ? "light" : "dark";
+    window.localStorage.setItem(storageKey, theme);
+    window.localStorage.removeItem(legacyStorageKey);
   } catch {
     theme = "dark";
   }

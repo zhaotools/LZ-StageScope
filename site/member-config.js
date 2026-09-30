@@ -1,4 +1,4 @@
-// Filled after the independent LZ-StageScope Supabase project is created.
+// Filled after the independent LZ-TrendScope Supabase project is created.
 // The publishable key and Turnstile site key are browser-safe public values.
 export const MEMBER_CONFIG = Object.freeze({
   supabaseUrl: "https://sqfxyzigygfaherffthu.supabase.co",

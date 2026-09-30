@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="robots" content="noindex">
-    <title>LZ-StageScope · 正在返回首页</title>
-    <link rel="icon" href="/LZ-StageScope/icons/favicon-v4.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
-    <link rel="icon" href="/LZ-StageScope/icons/favicon-32-v4.png" type="image/png" sizes="32x32">
+    <title>LZ-TrendScope · 正在返回首页</title>
+    <link rel="icon" href="/LZ-TrendScope/icons/favicon-v4.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="icon" href="/LZ-TrendScope/icons/favicon-32-v4.png" type="image/png" sizes="32x32">
     <script>
       const watchlist = /\/watchlist\/?$/.test(location.pathname);
       const match = location.pathname.match(/\/([a-z0-9-]+)\/(overview|weekly|daily|dca|fundamentals|methodology)\/?$/);
       const asset = match ? match[1] : null;
       const route = match ? match[2] : null;
       const target = watchlist || !asset || !route ? "/watchlist" : `/${asset}/${route}`;
-      location.replace("/LZ-StageScope/?route=" + encodeURIComponent(target));
+      location.replace("/LZ-TrendScope/?route=" + encodeURIComponent(target));
     </script>
   </head>
-  <body><a href="/LZ-StageScope/?route=%2Fwatchlist">返回 LZ-StageScope 观察列表</a></body>
+  <body><a href="/LZ-TrendScope/?route=%2Fwatchlist">返回 LZ-TrendScope 观察列表</a></body>
 </html>

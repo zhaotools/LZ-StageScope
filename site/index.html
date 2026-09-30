@@ -8,21 +8,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="趋势观察">
-    <meta name="description" content="LZ-StageScope 多资产周线、日线、定投与基本面趋势观察系统">
+    <meta name="description" content="LZ-TrendScope 多资产周线、日线、定投与基本面趋势观察系统">
     <meta name="robots" content="index,follow">
-    <title>LZ-StageScope · 多资产观察</title>
+    <title>LZ-TrendScope · 多资产观察</title>
     <link rel="manifest" href="./manifest.webmanifest">
-    <link rel="icon" href="/LZ-StageScope/icons/favicon-v4.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
-    <link rel="shortcut icon" href="/LZ-StageScope/icons/favicon-v4.ico" type="image/x-icon">
-    <link rel="icon" href="/LZ-StageScope/icons/favicon-32-v4.png" type="image/png" sizes="32x32">
-    <link rel="apple-touch-icon" href="/LZ-StageScope/icons/icon-180-v4.png">
-    <link rel="mask-icon" href="/LZ-StageScope/icons/safari-pinned-tab.svg" color="#168eea">
+    <link rel="icon" href="/LZ-TrendScope/icons/favicon-v4.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+    <link rel="shortcut icon" href="/LZ-TrendScope/icons/favicon-v4.ico" type="image/x-icon">
+    <link rel="icon" href="/LZ-TrendScope/icons/favicon-32-v4.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="/LZ-TrendScope/icons/icon-180-v4.png">
+    <link rel="mask-icon" href="/LZ-TrendScope/icons/safari-pinned-tab.svg" color="#168eea">
     <style id="critical-splash">
       html,body{background:#061e2f}
       #app-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:28px;color:#fff;background:#061e2f;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;opacity:1;visibility:visible;transition:opacity .36s ease,visibility .36s ease;animation:app-splash-failsafe .3s ease 12s forwards}#app-splash.is-ready{pointer-events:none;opacity:0;visibility:hidden;animation:none}.app-splash-inner{display:grid;width:min(290px,82vw);justify-items:center;text-align:center;transform:translateY(-7svh)}.app-splash-mark{display:grid;width:132px;height:92px;margin-bottom:22px;place-items:center}.app-splash-mark img{display:block;width:132px;height:auto}.app-splash-title{margin:0;color:#fff;font-size:24px;font-weight:760;letter-spacing:.01em}.app-splash-brand{margin:7px 0 0;color:rgba(255,255,255,.58);font-size:11px;font-weight:760;letter-spacing:.2em}.app-splash-rule{width:42px;height:2px;margin:22px 0 17px;border-radius:2px;background:#a87320}.app-splash-loading{display:grid;gap:16px;justify-items:center;transform:translateY(15svh)}.app-splash-status{margin:0;color:rgba(255,255,255,.7);font-size:11px;letter-spacing:.08em}.app-splash-progress{width:116px;height:2px;overflow:hidden;border-radius:2px;background:rgba(255,255,255,.12)}.app-splash-progress span{display:block;width:48%;height:100%;border-radius:inherit;background:#5eb4dc;animation:app-splash-progress 1.35s ease-in-out infinite}.app-splash-note{position:absolute;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));left:20px;margin:0;color:rgba(255,255,255,.34);font-size:9px;letter-spacing:.12em;text-align:center}@keyframes app-splash-progress{0%{transform:translateX(-110%)}100%{transform:translateX(220%)}}@keyframes app-splash-failsafe{to{pointer-events:none;opacity:0;visibility:hidden}}@media(prefers-reduced-motion:reduce){#app-splash{transition:none}.app-splash-progress span{animation:none;width:100%;opacity:.7}}
       @media (min-width:761px) and (display-mode:browser) and (pointer:fine){#app-splash{display:none}}
     </style>
-    <script src="./theme-init.js?v=1.0.0"></script>
+    <script src="./theme-init.js?v=1.0.1"></script>
     <link rel="stylesheet" href="./styles.css?v=1.3.22">
   </head>
   <body class="app-booting" aria-busy="true">
@@ -30,7 +30,7 @@
       <div class="app-splash-inner">
         <div class="app-splash-mark"><img src="./icons/brand-on-dark-v2.png" alt="" width="132" height="92"></div>
         <p class="app-splash-title">我的趋势观察</p>
-        <p class="app-splash-brand">LZ-STAGESCOPE</p>
+        <p class="app-splash-brand">LZ-TRENDSCOPE</p>
         <div class="app-splash-loading">
           <p class="app-splash-status">正在载入资产数据</p>
           <div class="app-splash-progress" aria-hidden="true"><span></span></div>
@@ -45,10 +45,10 @@
     <div class="application-shell">
       <aside class="asset-sidebar" aria-label="我的自选资产">
         <div class="mobile-watchlist-topbar">
-          <a class="mobile-watchlist-brand" href="./watchlist" data-watchlist-link aria-label="LZ-StageScope 观察列表">
+          <a class="mobile-watchlist-brand" href="./watchlist" data-watchlist-link aria-label="LZ-TrendScope 观察列表">
             <img src="./icons/brand-on-dark-v2.png" class="watchlist-brand-dark" alt="" width="55" height="38">
             <img class="watchlist-brand-light" src="./icons/brand-on-light-v2.png" alt="" width="55" height="38">
-            <span><strong>我的趋势观察</strong><small>LZ-StageScope</small></span>
+            <span><strong>我的趋势观察</strong><small>LZ-TrendScope</small></span>
           </a>
           <div class="mobile-watchlist-utilities" aria-label="移动端工具">
             <button class="watchlist-theme-toggle" type="button" data-watchlist-theme-toggle aria-label="切换到浅色资产列表" aria-pressed="false" title="切换到浅色资产列表">
@@ -89,9 +89,9 @@
         <strong id="mobile-detail-title">资产信息</strong>
       </div>
       <div class="top-utility-bar shell" aria-label="页面工具">
-        <a class="top-brand" href="./watchlist" data-route="overview" aria-label="LZ-StageScope 首页">
+        <a class="top-brand" href="./watchlist" data-route="overview" aria-label="LZ-TrendScope 首页">
           <img src="./icons/brand-on-light-v2.png" alt="" width="37" height="26">
-          <span><strong>我的趋势观察</strong><small>LZ-StageScope</small></span>
+          <span><strong>我的趋势观察</strong><small>LZ-TrendScope</small></span>
         </a>
         <div class="top-utility-actions">
           <button class="watchlist-theme-toggle top-theme-toggle" type="button" data-watchlist-theme-toggle aria-label="切换到浅色资产列表" aria-pressed="false" title="切换到浅色资产列表">
@@ -336,7 +336,7 @@
       </main>
 
       <footer class="site-footer shell">
-      <span id="footer-label">LZ-StageScope · 我的趋势观察</span>
+      <span id="footer-label">LZ-TrendScope · 我的趋势观察</span>
       <a href="./watchlist" data-route="methodology">基于完成周期 · 查看框架与数据</a>
       </footer>
 
@@ -430,6 +430,6 @@
     </div>
 
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script type="module" src="./app.js?v=1.3.31"></script>
+    <script type="module" src="./app.js?v=1.3.32"></script>
   </body>
 </html>

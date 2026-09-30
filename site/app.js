@@ -1081,7 +1081,7 @@ function syncPageMode() {
   $('meta[name="theme-color"]').content = watchlistView ? "#061e2f" : "#f4f7fa";
   if (watchlistView) {
     document.body.classList.remove("methodology-view");
-    document.title = "LZ-StageScope · 观察列表";
+    document.title = "LZ-TrendScope · 观察列表";
     $$('[data-route]').forEach((link) => {
       link.classList.remove("active");
       link.removeAttribute("aria-current");
@@ -1098,9 +1098,9 @@ function syncRouteShell(route) {
   const methodologyView = route === "methodology";
   document.body.classList.toggle("methodology-view", methodologyView);
   if (methodologyView) {
-    document.title = "LZ-StageScope · 框架与数据";
+    document.title = "LZ-TrendScope · 框架与数据";
   } else if (state.current) {
-    document.title = `LZ-StageScope · ${assets[state.assetId].name}观察`;
+    document.title = `LZ-TrendScope · ${assets[state.assetId].name}观察`;
   }
 }
 
@@ -1258,12 +1258,12 @@ function updateHeader() {
   const quote = current.quote;
   const marketFreshness = current.quality?.marketFreshness;
   document.body.dataset.asset = state.assetId;
-  document.title = `LZ-StageScope · ${presentation.name}观察`;
+  document.title = `LZ-TrendScope · ${presentation.name}观察`;
   $("#asset-symbol").textContent = presentation.code;
   $("#asset-name").textContent = presentation.name;
   $("#mobile-detail-title").textContent = `${presentation.code}/${presentation.currency || quote.currency || "USD"} · ${presentation.name}`;
   $("#overview-title").textContent = `${presentation.name}状态总览`;
-  $("#footer-label").textContent = `LZ-StageScope · ${presentation.name}观察`;
+  $("#footer-label").textContent = `LZ-TrendScope · ${presentation.name}观察`;
   $("#module-tabs").setAttribute("aria-label", `${presentation.name}分析模块`);
   $("#weekly-chart").setAttribute("aria-label", `${presentation.name}周线价格图`);
   $("#daily-chart").setAttribute("aria-label", `${presentation.name}日线价格图`);
@@ -2887,7 +2887,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.28", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.29", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
