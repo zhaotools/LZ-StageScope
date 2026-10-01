@@ -23,7 +23,7 @@
       @media (min-width:761px) and (display-mode:browser) and (pointer:fine){#app-splash{display:none}}
     </style>
     <script src="./theme-init.js?v=1.0.1"></script>
-    <link rel="stylesheet" href="./styles.css?v=1.3.28">
+    <link rel="stylesheet" href="./styles.css?v=1.3.29">
   </head>
   <body class="app-booting" aria-busy="true">
     <div id="app-splash" role="status" aria-live="polite" aria-label="正在加载我的趋势观察">
@@ -71,6 +71,7 @@
                 <option value="hk_equity">港股</option>
                 <option value="crypto">加密</option>
                 <option value="commodity">大宗商品</option>
+                <option value="macro">宏观</option>
               </select>
             </div>
             <button class="asset-add-button" id="add-asset-button" type="button" aria-label="新增自选资产" title="新增资产">+</button>
@@ -148,7 +149,7 @@
       </div>
 
       <section class="route-panel shell" data-panel="overview" hidden>
-        <div class="overview-snapshot">
+        <div class="overview-snapshot" id="standard-overview">
           <div class="overview-top-row">
             <article class="overview-module overview-summary-module">
               <header class="snapshot-header">
@@ -200,6 +201,23 @@
           <summary><span>数据状态</span><strong id="quality-summary">—</strong></summary>
           <p id="quality-detail">—</p>
         </details>
+        <div class="macro-overview" id="macro-overview" hidden>
+          <article class="panel macro-summary-panel">
+            <span class="panel-kicker">MACRO OBSERVATION</span>
+            <h2 id="macro-title">宏观观察</h2>
+            <p id="macro-description">按数据源公布的日值观察，不生成交易资产的阶段或定投判断。</p>
+            <div class="macro-observation-grid">
+              <div><span>最新观测值</span><strong id="macro-value">—</strong></div>
+              <div><span id="macro-delta-label">较上一观测日</span><strong id="macro-delta">—</strong></div>
+              <div><span>观测日期</span><strong id="macro-date">—</strong></div>
+            </div>
+          </article>
+          <article class="panel macro-chart-panel">
+            <div class="chart-header"><div class="chart-title"><h3 id="macro-chart-title">历史走势</h3></div></div>
+            <div class="chart macro-chart" id="macro-chart" aria-label="宏观历史走势"></div>
+          </article>
+          <p class="macro-source-note" id="macro-source-note"></p>
+        </div>
       </section>
 
       <section class="route-panel shell" data-panel="weekly" hidden>
@@ -365,6 +383,7 @@
             <option value="hk_equity">港股</option>
             <option value="crypto">加密</option>
             <option value="commodity">大宗商品</option>
+            <option value="macro">宏观</option>
           </select>
           <label for="asset-query">资产代码</label>
           <div class="asset-query-row">
@@ -376,7 +395,7 @@
         <div class="asset-catalog" id="asset-catalog"></div>
         <div class="asset-initialization-note">
           <strong>首次添加需要初始化</strong>
-          <span>系统将依次验证代码、获取历史行情、生成周线与日线分析并发布快照。通常需要数分钟，关闭窗口不会中断任务。</span>
+          <span>系统将依次验证代码、获取历史数据并发布可用快照。通常需要数分钟，关闭窗口不会中断任务。宏观观察项不生成阶段和定投判断。</span>
         </div>
       </section>
     </div>
@@ -430,6 +449,6 @@
     </div>
 
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script type="module" src="./app.js?v=1.3.38"></script>
+    <script type="module" src="./app.js?v=1.3.39"></script>
   </body>
 </html>

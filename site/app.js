@@ -86,8 +86,9 @@ const ASSET_CODE_PATTERNS = {
   hk_equity: /^\d{4,5}(?:\.HK)?$/,
   crypto: /^[A-Z0-9]{2,20}(?:[-/](?:USD|USDT|USDC))?$/,
   commodity: /^[A-Z]{1,12}(?:=F)?$/,
+  macro: /^(?:US10Y|DXY)$/,
 };
-const WATCHLIST_CATEGORIES = new Set(["all", "us_equity", "cn_equity", "hk_equity", "crypto", "commodity"]);
+const WATCHLIST_CATEGORIES = new Set(["all", "us_equity", "cn_equity", "hk_equity", "crypto", "commodity", "macro"]);
 function applyWatchlistTheme(value, { persist = false } = {}) {
   const theme = value === "light" ? "light" : "dark";
   const targetTheme = theme === "dark" ? "light" : "dark";
@@ -216,6 +217,10 @@ function canUseDca() {
   return isDcaEnabled(state.memberProfile);
 }
 
+function isMacroAsset(assetId = state.assetId) {
+  return assets[assetId]?.category === "macro";
+}
+
 function canAccessAsset(assetId) {
   const row = memberAssetRow(assetId);
   return Boolean(isMember() && assets[assetId] && row?.status === "ready");
@@ -258,6 +263,7 @@ function normalizeRoute({ preferFirstAsset = false, preferWatchlist = false } = 
   if (!firstAssetId) {
     state.loadToken += 1;
     state.assetId = null;
+    document.body.classList.remove("macro-asset");
     state.current = null;
     state.daily = null;
     state.weekly = null;
@@ -295,6 +301,7 @@ function normalizeRoute({ preferFirstAsset = false, preferWatchlist = false } = 
     assetId = firstAssetId;
     route = route === "methodology" ? route : "overview";
   }
+  if (isMacroAsset(assetId) && !["overview", "methodology"].includes(route)) route = "overview";
   if (route === "dca" && !canUseDca()) {
     if (isMember()) {
       state.pendingDcaNotice = true;
@@ -319,7 +326,9 @@ function normalizeRoute({ preferFirstAsset = false, preferWatchlist = false } = 
 function updateRouteLinks() {
   $$('[data-route]').forEach((link) => {
     link.href = routePath(link.dataset.route);
-    if (link.dataset.route === "dca") link.hidden = !canUseDca();
+    if (["weekly", "daily", "dca", "fundamentals"].includes(link.dataset.route)) {
+      link.hidden = isMacroAsset() || (link.dataset.route === "dca" && !canUseDca());
+    }
   });
   $$('[data-watchlist-link]').forEach((link) => { link.href = watchlistPath(); });
 }
@@ -417,16 +426,23 @@ function watchlistQuote(snapshot) {
   const validPrevious = Number.isFinite(previousClose) && previousClose !== 0;
   const change = validPrice && validPrevious ? ((price - previousClose) / previousClose) * 100 : null;
   const freshness = snapshot?.quality?.marketFreshness;
+  const macro = snapshot?.asset?.categoryId === "macro";
+  const yieldSeries = macro && snapshot?.macro?.code === "US10Y";
   return {
-    price: validPrice ? price.toLocaleString("zh-CN", { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—",
-    change: Number.isFinite(change) ? `${change >= 0 ? "+" : ""}${change.toFixed(2)}%` : "—",
-    tone: Number.isFinite(change) ? (change >= 0 ? "positive" : "negative") : "",
+    price: validPrice
+      ? `${price.toLocaleString("zh-CN", { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 })}${yieldSeries ? "%" : ""}`
+      : "—",
+    change: yieldSeries && validPrice && validPrevious
+      ? `${(price - previousClose) >= 0 ? "+" : ""}${((price - previousClose) * 100).toFixed(1)}bp`
+      : Number.isFinite(change) ? `${change >= 0 ? "+" : ""}${change.toFixed(2)}%` : "—",
+    tone: macro ? "" : Number.isFinite(change) ? (change >= 0 ? "positive" : "negative") : "",
     delayed: freshness?.sourceFresh === false,
     date: freshness?.lastDate || snapshot?.quote?.date || "",
   };
 }
 
 function watchlistWeekly(snapshot, fallbackStatus) {
+  if (snapshot?.asset?.categoryId === "macro") return "宏观";
   const confirmed = snapshot?.weekly?.current?.confirmed;
   const code = confirmed?.label || confirmed?.code;
   const weeks = Number(confirmed?.weeks);
@@ -439,10 +455,11 @@ function assetStatusLabel(status) {
 }
 
 function instrumentTypeLabel(value) {
-  return ({ EQUITY: "个股", ETF: "ETF", INDEX: "指数" })[String(value || "").toUpperCase()] || "资产";
+  return ({ EQUITY: "个股", ETF: "ETF", INDEX: "指数", MACRO: "宏观观察项" })[String(value || "").toUpperCase()] || "资产";
 }
 
 function catalogMarketSource(asset) {
+  if (asset.category === "macro") return asset.displaySymbol === "US10Y" ? "美联储 H.15 / FRED" : "Yahoo Finance / ICE 美元指数";
   if (asset.category === "cn_equity" && String(asset.quoteType || "").toUpperCase() === "INDEX") {
     return "腾讯证券";
   }
@@ -481,6 +498,7 @@ function renderWatchlist() {
   const categoryFilter = $("#watchlist-category-filter");
   const watchlistNode = $("#asset-watchlist");
   categoryFilter.value = state.watchlistCategory;
+  $(".watchlist-table-header span:nth-child(2)").textContent = state.watchlistCategory === "macro" ? "最新值" : "日收盘";
   categoryFilter.disabled = !watchlist.length || state.watchlistSorting;
   addButton.hidden = !member;
   addButton.disabled = member && (watchlist.length >= 30 || state.watchlistSorting);
@@ -523,8 +541,8 @@ function renderWatchlist() {
     return `
       <button class="watchlist-asset ${assetId === state.assetId ? "active" : ""} ${esc(status)}" type="button" data-asset="${esc(assetId)}" data-status="${esc(status)}" aria-pressed="${assetId === state.assetId}" ${state.watchlistSorting ? 'aria-grabbed="false"' : ""} aria-label="${esc(asset.shortName)}${state.watchlistSorting ? "，可拖动排序" : ""}">
         ${state.watchlistSorting ? '<span class="watchlist-drag-handle" role="button" tabindex="0" aria-label="按住拖动资产排序" aria-grabbed="false" title="按住拖动排序"><span aria-hidden="true">⋮</span></span>' : ""}
-        <span class="watchlist-asset-copy"><strong>${esc(asset.code)}/${esc(asset.currency || "USD")}</strong><small>${esc(asset.shortName)}</small></span>
-        <span class="watchlist-price ${quote.delayed ? "delayed" : ""}" ${quote.delayed ? `title="${esc(`行情延迟，最近可用 ${fmtDate(quote.date)}`)}"` : ""}>${ready ? quote.price : "—"}</span>
+        <span class="watchlist-asset-copy"><strong>${esc(asset.code)}${asset.category === "macro" ? "" : `/${esc(asset.currency || "USD")}`}</strong><small>${esc(asset.shortName)}</small></span>
+        <span class="watchlist-price ${quote.delayed ? "delayed" : ""}" ${quote.delayed ? `title="${esc(`${asset.category === "macro" ? "数据" : "行情"}延迟，最近可用 ${fmtDate(quote.date)}`)}"` : ""}>${ready ? quote.price : "—"}</span>
         <span class="watchlist-change ${quote.tone}">${ready ? quote.change : "—"}</span>
         <span class="watchlist-stage ${weeklyStage ? `stage-s${weeklyStage}` : ""}">${weekly}</span>
         ${removable ? `<span class="watchlist-remove" role="button" tabindex="0" data-remove-asset="${esc(assetId)}" aria-label="从自选移除">×</span>` : ""}
@@ -659,7 +677,7 @@ function initializationStageLabel(stage) {
   return ({
     queued: "已加入初始化队列",
     fetching_history: "正在获取历史行情",
-    publishing: "正在发布分析快照",
+    publishing: "正在发布数据快照",
     complete: "初始化完成",
     failed: "初始化失败",
   })[stage] || "正在执行初始化";
@@ -668,6 +686,7 @@ function initializationStageLabel(stage) {
 function initializationFailureMessage(job) {
   return ({
     market_history_failed: "历史行情暂时无法获取，请稍后移除并重新添加。",
+    macro_history_failed: "宏观数据源暂时无法获取，请稍后移除并重新添加。",
     daily_analysis_failed: "日线状态分析未完成，请稍后重试。",
     weekly_analysis_failed: "周线阶段分析未完成，请稍后重试。",
     fundamentals_build_failed: "基本面初始状态生成未完成，请稍后重试。",
@@ -1066,7 +1085,7 @@ function clearCharts() {
     chart?.remove?.();
   });
   state.charts.clear();
-  for (const id of ["weekly-chart", "daily-chart", "dca-chart"]) {
+  for (const id of ["weekly-chart", "daily-chart", "dca-chart", "macro-chart"]) {
     const container = document.getElementById(id);
     if (container) container.replaceChildren();
   }
@@ -1105,7 +1124,11 @@ function syncRouteShell(route) {
 }
 
 function activateRoute() {
-  const route = routeFromLocation();
+  let route = routeFromLocation();
+  if (isMacroAsset() && !["overview", "methodology"].includes(route)) {
+    route = "overview";
+    history.replaceState({ assetId: state.assetId, route }, "", routePath(route));
+  }
   if (syncPageMode()) {
     renderWatchlist();
     updateRouteLinks();
@@ -1123,6 +1146,11 @@ function activateRoute() {
   updateRouteLinks();
   renderWatchlist();
   if (state.current) void ensureRouteData(route);
+  if (route === "overview" && isMacroAsset() && state.daily?.series?.length) {
+    void loadChartLibrary().then(() => requestAnimationFrame(renderMacroChart)).catch((error) => {
+      $("#macro-chart").textContent = error.message;
+    });
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -1258,10 +1286,13 @@ function updateHeader() {
   const quote = current.quote;
   const marketFreshness = current.quality?.marketFreshness;
   document.body.dataset.asset = state.assetId;
+  document.body.classList.toggle("macro-asset", isMacroAsset());
   document.title = `LZ-TrendScope · ${presentation.name}观察`;
   $("#asset-symbol").textContent = presentation.code;
   $("#asset-name").textContent = presentation.name;
-  $("#mobile-detail-title").textContent = `${presentation.code}/${presentation.currency || quote.currency || "USD"} · ${presentation.name}`;
+  $("#mobile-detail-title").textContent = isMacroAsset()
+    ? `${presentation.code} · ${presentation.name}`
+    : `${presentation.code}/${presentation.currency || quote.currency || "USD"} · ${presentation.name}`;
   $("#overview-title").textContent = `${presentation.name}状态总览`;
   $("#footer-label").textContent = `LZ-TrendScope · ${presentation.name}观察`;
   $("#module-tabs").setAttribute("aria-label", `${presentation.name}分析模块`);
@@ -1273,16 +1304,21 @@ function updateHeader() {
   $("#asset-benchmark").textContent = ["cn_equity", "hk_equity"].includes(presentation.category)
     ? `${current.asset.symbol} · ${presentation.category === "cn_equity" ? "A股" : "港股"}`
     : current.asset.technicalBenchmark;
-  $("#quote-price").textContent = fmt(quote.price, 1);
+  $("#quote-price").textContent = fmt(quote.price, isMacroAsset() ? 2 : 1);
   $(".quote-label").textContent = marketFreshness?.sourceFresh === false
-    ? "行情延迟 · 最近可用收盘"
-    : "最新确认收盘";
+    ? isMacroAsset() ? "数据延迟 · 最近观测值" : "行情延迟 · 最近可用收盘"
+    : isMacroAsset() ? "最新观测值" : "最新确认收盘";
   $("#quote-currency").textContent = quote.currency;
   const change = $("#quote-change");
-  change.textContent = `${delta >= 0 ? "+" : ""}${fmt(delta, 1)} · ${percent >= 0 ? "+" : ""}${fmt(percent, 2)}%`;
-  change.className = delta >= 0 ? "positive" : "negative";
+  change.textContent = isMacroAsset()
+    ? current.macro.code === "US10Y"
+      ? `${delta >= 0 ? "+" : ""}${fmt(delta * 100, 1)} bp · 较上一观测日`
+      : `${delta >= 0 ? "+" : ""}${fmt(delta, 2)} 点 · ${percent >= 0 ? "+" : ""}${fmt(percent, 2)}%`
+    : `${delta >= 0 ? "+" : ""}${fmt(delta, 1)} · ${percent >= 0 ? "+" : ""}${fmt(percent, 2)}%`;
+  change.className = isMacroAsset() ? "" : delta >= 0 ? "positive" : "negative";
+  $(".hero-meta dt").textContent = isMacroAsset() ? "观测日期" : "日线日期";
   $("#daily-date").textContent = fmtDate(current.daily.asOf);
-  $("#weekly-date").textContent = fmtDate(current.weekly.asOf);
+  $("#weekly-date").textContent = fmtDate(current.weekly?.asOf);
   const generatedAt = new Date(current.generatedAt);
   $("#generated-date").textContent = generatedAt.toLocaleDateString("zh-CN", {
     timeZone: "Asia/Shanghai", month: "2-digit", day: "2-digit",
@@ -1294,6 +1330,43 @@ function updateHeader() {
     timeZone: "Asia/Shanghai", hour12: false,
   });
   renderWatchlist();
+}
+
+function renderMacroOverview() {
+  const current = state.current;
+  const yieldSeries = current.macro.code === "US10Y";
+  const delta = Number(current.quote.price) - Number(current.quote.previousClose);
+  const percent = Number(current.quote.previousClose) ? delta / Number(current.quote.previousClose) * 100 : 0;
+  $("#macro-title").textContent = current.asset.name;
+  $("#overview-title").textContent = `${current.asset.name}宏观观察`;
+  $("#macro-value").textContent = `${fmt(current.quote.price, 2)} ${current.macro.unit}`;
+  $("#macro-delta-label").textContent = yieldSeries ? "较上一观测日 · 基点" : "较上一观测日 · 点数";
+  $("#macro-delta").textContent = yieldSeries
+    ? `${delta >= 0 ? "+" : ""}${fmt(delta * 100, 1)} bp`
+    : `${delta >= 0 ? "+" : ""}${fmt(delta, 2)} 点 (${percent >= 0 ? "+" : ""}${fmt(percent, 2)}%)`;
+  $("#macro-date").textContent = fmtDate(current.quote.date);
+  $("#macro-chart-title").textContent = `${current.asset.name} · 历史日值`;
+  $("#macro-chart").setAttribute("aria-label", `${current.asset.name}历史日值折线图`);
+  $("#macro-description").textContent = yieldSeries
+    ? "美国10年期国债收益率，单位为百分比；官方日值不含真实开高低收和成交量。"
+    : "ICE 美元指数的日度收盘观察值；这不是美联储广义美元指数。";
+  const freshness = current.quality?.marketFreshness;
+  $("#macro-source-note").textContent = `数据源：${current.source.name} · 截至 ${fmtDate(current.quote.date)}${freshness?.sourceFresh === false ? " · 数据源更新延迟" : ""}。宏观指标不提供四阶段、日线融合或定投建议。`;
+}
+
+function renderMacroChart() {
+  const id = "macro-chart";
+  if (state.charts.has(id) || !state.daily?.series?.length) return;
+  const container = document.getElementById(id);
+  if (!container || container.clientWidth === 0) return;
+  const api = chartApi(container, "macro");
+  if (!api) return;
+  const line = api.addLine({ color: "#2478a5", lineWidth: 2, priceLineVisible: false });
+  line.setData(state.daily.series.map((point) => ({ time: point.date, value: Number(point.value) })));
+  api.chart.timeScale().fitContent();
+  const observer = new ResizeObserver(() => api.chart.applyOptions({ width: container.clientWidth, height: container.clientHeight }));
+  observer.observe(container);
+  state.charts.set(id, { ...api, line, observer });
 }
 
 function renderOverview() {
@@ -1716,6 +1789,22 @@ function renderDca() {
 }
 
 function renderMethodology() {
+  if (isMacroAsset() && state.current?.macro) {
+    const { current } = state;
+    const yieldSeries = current.macro.code === "US10Y";
+    $("#provenance-panel").innerHTML = `
+      <div class="panel-heading"><span class="panel-kicker">PROVENANCE</span><h2>可追溯信息</h2></div>
+      <div class="provenance-grid">
+        <div class="code-block">观察项<br>${esc(current.asset.name)}<br>${esc(current.macro.code)}</div>
+        <div class="code-block">数据源<br>${esc(current.source.name)}<br>${esc(current.source.providerSymbol)}</div>
+        <div class="code-block">数值单位<br>${yieldSeries ? "收益率，百分比" : "美元指数，点"}<br>逐日观察值</div>
+        <div class="code-block">日期原则<br>只显示已完成日值<br>保留数据源发布日期差异</div>
+        <div class="code-block">数据边界<br>无真实开高低收或成交量<br>不生成阶段、融合状态与定投建议</div>
+        <div class="code-block">序列身份<br>${yieldSeries ? "FRED DGS10" : "ICE DXY，经 Yahoo Finance 获取"}<br>不使用其他美元或债券序列替代</div>
+      </div>
+    `;
+    return;
+  }
   const engines = state.current?.engines || {
     weekly: { name: "LZ-4Stage", version: "LZAS-W-1.0.0" },
     daily: { name: "LZ-Status-V3", version: "LZAS-D-1.0.0" },
@@ -2531,7 +2620,8 @@ function renderDcaChart() {
 
 async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFromLocation() } = {}) {
   if (!assets[assetId]) return;
-  const route = routes.has(targetRoute) ? targetRoute : "overview";
+  const route = isMacroAsset(assetId) && !["overview", "methodology"].includes(targetRoute)
+    ? "overview" : routes.has(targetRoute) ? targetRoute : "overview";
   if (!requestAssetAccess(assetId, route)) return;
   if (historyMode === "push") history.pushState({ assetId, route }, "", routePath(route, assetId));
   if (historyMode === "replace") history.replaceState({ assetId, route }, "", routePath(route, assetId));
@@ -2559,7 +2649,15 @@ async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFro
     state.assetSummaries.set(assetId, current);
     updateHeader();
     renderWatchlist();
-    renderOverview();
+    const macro = current.schemaVersion === "macro-observation-v1";
+    $("#standard-overview").hidden = macro;
+    $("#quality-banner").hidden = macro;
+    $("#macro-overview").hidden = !macro;
+    if (macro) {
+      state.daily = await loadAssetResource(assetId, "daily-series.json");
+      if (token !== state.loadToken || assetId !== state.assetId) return;
+      renderMacroOverview();
+    } else renderOverview();
     renderMethodology();
     $("#loading-state").hidden = true;
     activateRoute();
@@ -2919,6 +3017,14 @@ $("#member-display-name-form").addEventListener("submit", handleDisplayNameUpdat
 $("#member-password-form").addEventListener("submit", handlePasswordUpdate);
 $("#member-password-form").addEventListener("input", syncAccountPasswordSubmit);
 $("#asset-search-form").addEventListener("submit", handleAssetSearch);
+$("#asset-category").addEventListener("change", (event) => {
+  const macro = event.target.value === "macro";
+  $("#asset-query").placeholder = macro ? "US10Y / DXY" : "AAPL / 600519 / 0700 / ETH / GC";
+  $("#asset-query").value = "";
+  state.assetSearchResults = [];
+  setAssetPickerMessage(macro ? "宏观分类可添加 US10Y 或 DXY。" : "请输入对应分类的资产代码。");
+  renderAssetSearchResults();
+});
 $("#watchlist-category-filter").addEventListener("change", (event) => {
   const category = String(event.target.value || "all");
   state.watchlistCategory = WATCHLIST_CATEGORIES.has(category) ? category : "all";
@@ -2947,7 +3053,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.35", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.43", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });

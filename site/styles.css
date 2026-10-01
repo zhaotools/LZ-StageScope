@@ -1979,3 +1979,32 @@ html[data-watchlist-theme="light"] .watchlist-remove {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+body.macro-asset .module-tabs,
+body.macro-asset .mobile-nav { display: none !important; }
+body.macro-asset .hero-meta div:nth-child(2) { display: none; }
+body.macro-asset .hero-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.macro-overview { display: grid; gap: 20px; }
+.macro-overview[hidden], #standard-overview[hidden], #quality-banner[hidden] { display: none !important; }
+.macro-summary-panel, .macro-chart-panel { padding: clamp(22px, 3vw, 34px); }
+.macro-summary-panel h2 { margin: 12px 0 8px; color: var(--ink); font-size: clamp(24px, 2.6vw, 34px); }
+.macro-summary-panel p { margin: 0; color: var(--muted); line-height: 1.6; }
+.macro-observation-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px; }
+.macro-observation-grid div { display: grid; gap: 8px; padding: 16px; border-radius: 14px; background: var(--surface-muted); }
+.macro-observation-grid span { color: var(--muted); font-size: 13px; }
+.macro-observation-grid strong { color: var(--ink); font-size: 21px; font-variant-numeric: tabular-nums; }
+.macro-chart { height: min(420px, 52vw); min-height: 250px; }
+.macro-source-note { margin: 0; padding: 0 4px 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+@media (max-width: 760px) {
+  body.macro-asset .hero-meta div:nth-child(1) { grid-column: 1; }
+  body.macro-asset .hero-meta div:nth-child(3) { grid-column: 2; }
+  .macro-observation-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .macro-observation-grid div:last-child { grid-column: 1 / -1; }
+  .macro-observation-grid strong { font-size: 17px; }
+  .macro-chart { height: 310px; }
+}
+@media (max-width: 640px) {
+  body.macro-asset .asset-hero { grid-template-columns: minmax(0, 1fr) max-content max-content; }
+  body.macro-asset .hero-meta div:nth-child(1) { grid-column: 2; }
+  body.macro-asset .hero-meta div:nth-child(3) { grid-column: 3; }
+}
