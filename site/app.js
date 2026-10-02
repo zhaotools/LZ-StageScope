@@ -194,7 +194,7 @@ function updateAssetPresentationFromSnapshot(assetId, snapshot) {
 
 function loadAssetResource(assetId, resource) {
   if (resource === "dca-series.json") {
-    if (!canUseDca()) throw new Error("当前账号未开通定投指标。");
+    if (!canUseDca(assetId)) throw new Error(isMacroAsset(assetId) ? "宏观资产不提供定投建议。" : "当前账号未开通定投指标。");
     return loadMemberAssetResource(assetId, resource);
   }
   return loadMemberAssetResource(assetId, resource);
@@ -213,12 +213,17 @@ function isMember() {
   return isProfileActive(state.memberProfile);
 }
 
-function canUseDca() {
-  return isDcaEnabled(state.memberProfile);
+function canUseDca(assetId = state.assetId) {
+  return !isMacroAsset(assetId) && isDcaEnabled(state.memberProfile);
 }
 
 function isMacroAsset(assetId = state.assetId) {
   return assets[assetId]?.category === "macro";
+}
+
+function isLegacyMacroObservation(assetId = state.assetId) {
+  const snapshot = assetId === state.assetId ? state.current : state.assetSummaries.get(assetId);
+  return snapshot?.schemaVersion === "macro-observation-v1";
 }
 
 function canAccessAsset(assetId) {
@@ -263,7 +268,7 @@ function normalizeRoute({ preferFirstAsset = false, preferWatchlist = false } = 
   if (!firstAssetId) {
     state.loadToken += 1;
     state.assetId = null;
-    document.body.classList.remove("macro-asset");
+    document.body.classList.remove("macro-asset", "macro-observation");
     state.current = null;
     state.daily = null;
     state.weekly = null;
@@ -301,8 +306,9 @@ function normalizeRoute({ preferFirstAsset = false, preferWatchlist = false } = 
     assetId = firstAssetId;
     route = route === "methodology" ? route : "overview";
   }
-  if (isMacroAsset(assetId) && !["overview", "methodology"].includes(route)) route = "overview";
-  if (route === "dca" && !canUseDca()) {
+  if (isLegacyMacroObservation(assetId) && !["overview", "methodology"].includes(route)) route = "overview";
+  if (isMacroAsset(assetId) && route === "dca") route = "overview";
+  if (route === "dca" && !canUseDca(assetId)) {
     if (isMember()) {
       state.pendingDcaNotice = true;
     } else {
@@ -327,7 +333,7 @@ function updateRouteLinks() {
   $$('[data-route]').forEach((link) => {
     link.href = routePath(link.dataset.route);
     if (["weekly", "daily", "dca", "fundamentals"].includes(link.dataset.route)) {
-      link.hidden = isMacroAsset() || (link.dataset.route === "dca" && !canUseDca());
+      link.hidden = isLegacyMacroObservation() || (link.dataset.route === "dca" && !canUseDca());
     }
   });
   $$('[data-watchlist-link]').forEach((link) => { link.href = watchlistPath(); });
@@ -442,7 +448,7 @@ function watchlistQuote(snapshot) {
 }
 
 function watchlistWeekly(snapshot, fallbackStatus) {
-  if (snapshot?.asset?.categoryId === "macro") return "宏观";
+  if (snapshot?.schemaVersion === "macro-observation-v1") return "待更新";
   const confirmed = snapshot?.weekly?.current?.confirmed;
   const code = confirmed?.label || confirmed?.code;
   const weeks = Number(confirmed?.weeks);
@@ -459,7 +465,7 @@ function instrumentTypeLabel(value) {
 }
 
 function catalogMarketSource(asset) {
-  if (asset.category === "macro") return asset.displaySymbol === "US10Y" ? "美联储 H.15 / FRED" : "Yahoo Finance / ICE 美元指数";
+  if (asset.category === "macro") return asset.displaySymbol === "US10Y" ? "Yahoo Finance / Cboe 10年期收益率" : "Yahoo Finance / ICE 美元指数";
   if (asset.category === "cn_equity" && String(asset.quoteType || "").toUpperCase() === "INDEX") {
     return "腾讯证券";
   }
@@ -1125,7 +1131,7 @@ function syncRouteShell(route) {
 
 function activateRoute() {
   let route = routeFromLocation();
-  if (isMacroAsset() && !["overview", "methodology"].includes(route)) {
+  if ((isLegacyMacroObservation() && !["overview", "methodology"].includes(route)) || (isMacroAsset() && route === "dca")) {
     route = "overview";
     history.replaceState({ assetId: state.assetId, route }, "", routePath(route));
   }
@@ -1146,7 +1152,7 @@ function activateRoute() {
   updateRouteLinks();
   renderWatchlist();
   if (state.current) void ensureRouteData(route);
-  if (route === "overview" && isMacroAsset() && state.daily?.series?.length) {
+  if (route === "overview" && isLegacyMacroObservation() && state.daily?.series?.length) {
     void loadChartLibrary().then(() => requestAnimationFrame(renderMacroChart)).catch((error) => {
       $("#macro-chart").textContent = error.message;
     });
@@ -1186,6 +1192,7 @@ function setRouteState(route, status, message = "") {
 
 async function ensureRouteData(route, { force = false } = {}) {
   if (["overview", "methodology"].includes(route)) return;
+  if (route === "dca" && !canUseDca()) return;
   const assetId = state.assetId;
   if (force) state.routeLoads.delete(route);
   if (state.routeLoads.has(route)) return state.routeLoads.get(route);
@@ -1287,6 +1294,7 @@ function updateHeader() {
   const marketFreshness = current.quality?.marketFreshness;
   document.body.dataset.asset = state.assetId;
   document.body.classList.toggle("macro-asset", isMacroAsset());
+  document.body.classList.toggle("macro-observation", isLegacyMacroObservation());
   document.title = `LZ-TrendScope · ${presentation.name}观察`;
   $("#asset-symbol").textContent = presentation.code;
   $("#asset-name").textContent = presentation.name;
@@ -1316,7 +1324,7 @@ function updateHeader() {
       : `${delta >= 0 ? "+" : ""}${fmt(delta, 2)} 点 · ${percent >= 0 ? "+" : ""}${fmt(percent, 2)}%`
     : `${delta >= 0 ? "+" : ""}${fmt(delta, 1)} · ${percent >= 0 ? "+" : ""}${fmt(percent, 2)}%`;
   change.className = isMacroAsset() ? "" : delta >= 0 ? "positive" : "negative";
-  $(".hero-meta dt").textContent = isMacroAsset() ? "观测日期" : "日线日期";
+  $(".hero-meta dt").textContent = isLegacyMacroObservation() ? "观测日期" : "日线日期";
   $("#daily-date").textContent = fmtDate(current.daily.asOf);
   $("#weekly-date").textContent = fmtDate(current.weekly?.asOf);
   const generatedAt = new Date(current.generatedAt);
@@ -1351,7 +1359,7 @@ function renderMacroOverview() {
     ? "美国10年期国债收益率，单位为百分比；官方日值不含真实开高低收和成交量。"
     : "ICE 美元指数的日度收盘观察值；这不是美联储广义美元指数。";
   const freshness = current.quality?.marketFreshness;
-  $("#macro-source-note").textContent = `数据源：${current.source.name} · 截至 ${fmtDate(current.quote.date)}${freshness?.sourceFresh === false ? " · 数据源更新延迟" : ""}。宏观指标不提供四阶段、日线融合或定投建议。`;
+  $("#macro-source-note").textContent = `数据源：${current.source.name} · 截至 ${fmtDate(current.quote.date)}${freshness?.sourceFresh === false ? " · 数据源更新延迟" : ""}。技术分析快照正在更新，宏观资产不提供定投建议。`;
 }
 
 function renderMacroChart() {
@@ -1789,7 +1797,7 @@ function renderDca() {
 }
 
 function renderMethodology() {
-  if (isMacroAsset() && state.current?.macro) {
+  if (isLegacyMacroObservation() && state.current?.macro) {
     const { current } = state;
     const yieldSeries = current.macro.code === "US10Y";
     $("#provenance-panel").innerHTML = `
@@ -1799,7 +1807,7 @@ function renderMethodology() {
         <div class="code-block">数据源<br>${esc(current.source.name)}<br>${esc(current.source.providerSymbol)}</div>
         <div class="code-block">数值单位<br>${yieldSeries ? "收益率，百分比" : "美元指数，点"}<br>逐日观察值</div>
         <div class="code-block">日期原则<br>只显示已完成日值<br>保留数据源发布日期差异</div>
-        <div class="code-block">数据边界<br>无真实开高低收或成交量<br>不生成阶段、融合状态与定投建议</div>
+        <div class="code-block">数据边界<br>这是旧版单值快照<br>等待真实 OHLC 技术分析更新，定投保持关闭</div>
         <div class="code-block">序列身份<br>${yieldSeries ? "FRED DGS10" : "ICE DXY，经 Yahoo Finance 获取"}<br>不使用其他美元或债券序列替代</div>
       </div>
     `;
@@ -1815,8 +1823,8 @@ function renderMethodology() {
     <div class="provenance-grid">
       <div class="code-block">周线引擎<br>${esc(engines.weekly.name)}<br>内部版本: ${esc(engines.weekly.version)}</div>
       <div class="code-block">日线引擎<br>${esc(engines.daily.name)}<br>内部版本: ${esc(engines.daily.version)}</div>
-      <div class="code-block">定投引擎<br>LZ-DCA V1.1<br>内部版本: ${esc(engines.dca?.version || "LZAS-DCA-1.1.0")}</div>
-      <div class="code-block">统一输入原则<br>同一份标准化 OHLC<br>周线、日线与定投同源</div>
+      ${isMacroAsset() ? '<div class="code-block">宏观分析边界<br>定投建议已关闭<br>无适用成交量，不含成交量加分</div>' : `<div class="code-block">定投引擎<br>LZ-DCA V1.1<br>内部版本: ${esc(engines.dca?.version || "LZAS-DCA-1.1.0")}</div>`}
+      <div class="code-block">统一输入原则<br>同一份标准化真实 OHLC<br>${isMacroAsset() ? "周线和日线同源；US10Y 分析收益率而非债券价格" : "周线、日线与定投同源"}</div>
       <div class="code-block">周期确认原则<br>只使用完成周线<br>只使用确认收盘日线</div>
       <div class="code-block">数据状态原则<br>缺失与沿用明确标识<br>不把缺失数据解释为中性</div>
       <div class="code-block">自动更新机制<br>GitHub 08:08 主更新<br>Cloudflare 08:28 兜底检查</div>
@@ -2620,7 +2628,7 @@ function renderDcaChart() {
 
 async function loadAsset(assetId, { historyMode = "none", targetRoute = routeFromLocation() } = {}) {
   if (!assets[assetId]) return;
-  const route = isMacroAsset(assetId) && !["overview", "methodology"].includes(targetRoute)
+  const route = (isLegacyMacroObservation(assetId) && !["overview", "methodology"].includes(targetRoute)) || (isMacroAsset(assetId) && targetRoute === "dca")
     ? "overview" : routes.has(targetRoute) ? targetRoute : "overview";
   if (!requestAssetAccess(assetId, route)) return;
   if (historyMode === "push") history.pushState({ assetId, route }, "", routePath(route, assetId));
@@ -2982,7 +2990,7 @@ window.addEventListener("popstate", () => {
     history.replaceState({ assetId: firstAssetId, route: fallbackRoute }, "", routePath(fallbackRoute, firstAssetId));
     context = { assetId: firstAssetId, route: fallbackRoute };
   }
-  if (context.route === "dca" && !canUseDca()) {
+  if (context.route === "dca" && !canUseDca(context.assetId)) {
     const blockedAssetId = context.assetId;
     history.replaceState({ assetId: blockedAssetId, route: "overview" }, "", routePath("overview", blockedAssetId));
     if (isMember()) window.alert("当前账号未开通定投指标。需要开通时请联系管理员。");
@@ -3053,7 +3061,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.43", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.44", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
