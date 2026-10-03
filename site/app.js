@@ -1719,6 +1719,17 @@ function dcaTierClass(value) {
   return [0, 20, 40, 60, 80, 100].includes(tier) ? `tier-${tier}` : "tier-40";
 }
 
+// Presentation names are independent of the frozen v1.1 payload vocabulary.
+// Unknown values must never introduce an extra temperature zone in the UI.
+function dcaZoneLabel(value) {
+  const label = dcaDisplayText(value);
+  return ["低温区", "定投区", "观望区", "高温区"].includes(label) ? label : "待判断";
+}
+
+function dcaDisplayText(value) {
+  return String(value ?? "").replaceAll("抄底区", "低温区").replaceAll("观察区", "观望区");
+}
+
 function renderDcaZoneStatistics(dca, years = state.dcaRangeYears) {
   const safeYears = Math.min(4, Math.max(1, Number(years) || 1));
   const fullSeries = dca?.series || [];
@@ -1728,14 +1739,14 @@ function renderDcaZoneStatistics(dca, years = state.dcaRangeYears) {
     ? fullSeries.filter((item) => String(item.date || item.time) >= cutoff)
     : fullSeries;
   const zoneDefinitions = [
-    { source: "抄底区", label: "低温区", className: "zone-cold" },
-    { source: "定投区", label: "定投区", className: "zone-invest" },
-    { source: "观望区", label: "观望区", className: "zone-watch" },
-    { source: "高温区", label: "高温区", className: "zone-hot" },
+    { label: "低温区", className: "zone-cold" },
+    { label: "定投区", className: "zone-invest" },
+    { label: "观望区", className: "zone-watch" },
+    { label: "高温区", className: "zone-hot" },
   ];
   $("#dca-statistics-period").textContent = dca?.historyLimited ? "历史不足" : `近${safeYears}年`;
   $("#dca-tier-statistics").innerHTML = selectedSeries.length ? zoneDefinitions.map((item) => {
-    const days = selectedSeries.filter((point) => point.zone === item.source).length;
+    const days = selectedSeries.filter((point) => dcaZoneLabel(point.zone) === item.label).length;
     return `
     <article class="dca-tier-card ${item.className}">
       <span>${item.label}</span>
@@ -1762,7 +1773,7 @@ function renderDca() {
       <strong>${fmt(current.lzDca, 2)}</strong><span>LZ-DCA</span>
     </div>
     <div class="dca-current-zone ${esc(dcaTierClass(current.amountTier))}">
-      <span>${esc(current.zone || "待判断")}</span><strong>${esc(current.amountLabel || "—")} · ${fmt(current.amountTier, 0)}</strong>
+      <span>${esc(dcaZoneLabel(current.zone))}</span><strong>${esc(current.amountLabel || "—")} · ${fmt(current.amountTier, 0)}</strong>
     </div>
     <dl class="stat-list">
       <div><dt>确认日期</dt><dd>${esc(fmtDate(current.date || dca.asOf))}</dd></div>
@@ -1770,8 +1781,8 @@ function renderDca() {
     </dl>
     <div class="dca-recommendation ${esc(dcaTierClass(current.amountTier))}">
       <strong>规则建议</strong>
-      <p>${esc(current.recommendation || "等待完成日线后更新。")}</p>
-      <small>${esc(current.zoneAction || "")}</small>
+      <p>${esc(dcaDisplayText(current.recommendation || "等待完成日线后更新。"))}</p>
+      <small>${esc(dcaDisplayText(current.zoneAction))}</small>
     </div>
     ${reasons.length ? `<p class="dca-confirmation">严格信号确认：${reasons.map(esc).join("；")}</p>` : ""}
     ${historyLimited ? `<p class="dca-history-warning">${esc((dca.warnings || [])[0] || "历史数据不足，仅展示当前建议。")}</p>` : ""}
@@ -3061,7 +3072,7 @@ if ("serviceWorker" in navigator) {
       return;
     }
     navigator.serviceWorker
-      .register(new URL("service-worker.js?v=1.3.44", SITE_ROOT), { updateViaCache: "none" })
+      .register(new URL("service-worker.js?v=1.3.47", SITE_ROOT), { updateViaCache: "none" })
       .then((registration) => registration.update())
       .catch(console.warn);
   });
