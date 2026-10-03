@@ -1,4 +1,4 @@
-const CACHE = "lz-trendscope-v1.3.44";
+const CACHE = "lz-trendscope-v1.3.46";
 const SHELL = [
   "./",
   "./index.html",
